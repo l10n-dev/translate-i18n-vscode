@@ -6,6 +6,7 @@ export const CONFIG = {
     USE_CONTRACTIONS: "useContractions",
     USE_SHORTENING: "useShortening",
     GENERATE_PLURAL_FORMS: "generatePluralForms",
+    SAVE_FILTERED_STRINGS: "saveFilteredStrings",
   },
 } as const;
 
@@ -15,6 +16,7 @@ export const URLS = {
   API_BASE: "https://l10n.dev/api",
   API_KEYS: "https://l10n.dev/ws/keys",
   PRICING: "https://l10n.dev/#pricing",
+  CONTENT_POLICY: "https://l10n.dev/terms-of-service#content-policy",
 } as const;
 
 // State keys for extension storage

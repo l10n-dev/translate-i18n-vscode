@@ -428,36 +428,6 @@ suite("L10nTranslationService Test Suite", () => {
       assert.strictEqual(result, null);
     });
 
-    test("throws error for contentFilter finish reason", async () => {
-      const apiKey = "valid-api-key";
-      mockApiKeyManager.getApiKey.resolves(apiKey);
-
-      const mockResponse = {
-        ok: true,
-        json: sinon.stub().resolves({
-          targetLanguageCode: "es",
-          translations: { hello: "hola" },
-          usage: { charsUsed: 5 },
-          finishReason: "contentFilter",
-          completedChunks: 1,
-          totalChunks: 1,
-        }),
-      };
-
-      mockFetch.resolves(mockResponse);
-
-      await assert.rejects(
-        async () =>
-          await service.translateJson({
-            sourceStrings: {},
-            targetLanguageCode: "es",
-            useContractions: false,
-            useShortening: false,
-          }),
-        /Translation blocked by content filter\./
-      );
-    });
-
     test("throws error for error finish reason", async () => {
       const apiKey = "valid-api-key";
       mockApiKeyManager.getApiKey.resolves(apiKey);
@@ -497,6 +467,37 @@ suite("L10nTranslationService Test Suite", () => {
         translations: { hello: "hola" },
         usage: { charsUsed: 5 },
         finishReason: "length",
+        filteredStrings: { hello: "hola" },
+        completedChunks: 1,
+        totalChunks: 1,
+      };
+
+      const mockResponse = {
+        ok: true,
+        json: sinon.stub().resolves(expectedResult),
+      };
+
+      mockFetch.resolves(mockResponse);
+
+      const result = await service.translateJson({
+        sourceStrings: {},
+        targetLanguageCode: "es",
+        useContractions: false,
+        useShortening: false,
+      });
+      assert.deepStrictEqual(result, expectedResult);
+    });
+
+    test("does not throw error for contentFilter finish reason", async () => {
+      const apiKey = "valid-api-key";
+      mockApiKeyManager.getApiKey.resolves(apiKey);
+
+      const expectedResult = {
+        targetLanguageCode: "es",
+        translations: { hello: "hola" },
+        usage: { charsUsed: 5 },
+        finishReason: "contentFilter",
+        filteredStrings: { hello: "hola" },
         completedChunks: 1,
         totalChunks: 1,
       };

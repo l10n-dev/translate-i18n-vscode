@@ -9,14 +9,16 @@ import * as path from "path";
 import { ApiKeyManager } from "./apiKeyManager";
 import { I18nProjectManager } from "./i18nProjectManager";
 import {
+  FileSchema,
+  FinishReason,
   L10nTranslationService,
   TranslationRequest,
   TranslationResult,
 } from "./translationService";
 import { LanguageSelector } from "./languageSelector";
-import { showAndLogError, logInfo } from "./logger";
+import { showAndLogError, logInfo, logWarning } from "./logger";
 
-import { CONFIG, VSCODE_COMMANDS } from "./constants";
+import { CONFIG, VSCODE_COMMANDS, URLS } from "./constants";
 
 /**
  * Asks user how to handle existing target files
@@ -177,7 +179,8 @@ export async function handleTranslateCommand(
             targetFilePath,
             translationService,
             i18nProjectManager,
-            translateOnlyNewStrings
+            translateOnlyNewStrings,
+            isArbFile ? FileSchema.ARBFlutter : null
           );
 
           return { success: true, language: targetLanguage };
@@ -228,7 +231,8 @@ async function performTranslation(
   targetFilePath: string,
   translationService: L10nTranslationService,
   i18nProjectManager: I18nProjectManager,
-  translateOnlyNewStrings: boolean
+  translateOnlyNewStrings: boolean,
+  schema: FileSchema | null
 ) {
   let targetStrings: string | undefined = undefined;
   if (translateOnlyNewStrings && fs.existsSync(targetFilePath)) {
@@ -267,6 +271,7 @@ async function performTranslation(
         returnTranslationsAsString: true,
         translateOnlyNewStrings,
         targetStrings,
+        schema,
       };
 
       const result = await translationService.translateJson(request);
@@ -295,10 +300,72 @@ async function performTranslation(
       // Save translated file
       fs.writeFileSync(outputPath, result.translations, "utf8");
 
+      // Handle filtered strings if present
+      if (
+        result.filteredStrings &&
+        Object.keys(result.filteredStrings).length > 0
+      ) {
+        await handleFilteredStrings(result, outputPath);
+      }
+
       // Show success message with usage info after progress completes
       await showTranslationSuccess(result, outputPath);
     }
   );
+}
+
+async function handleFilteredStrings(
+  result: TranslationResult,
+  targetFilePath: string
+) {
+  let reasonMessage: string;
+  if (result.finishReason === "contentFilter") {
+    reasonMessage = "content policy violations";
+  } else if (result.finishReason === "length") {
+    reasonMessage = "AI context limit was reached (content too long)";
+  } else {
+    return;
+  }
+
+  const filteredCount = countAllKeys(result.filteredStrings);
+  let warningMessage = `${filteredCount} string(s) were excluded due to ${reasonMessage}.`;
+
+  const config = vscode.workspace.getConfiguration(CONFIG.SECTION);
+  const saveFilteredStrings = config.get(
+    CONFIG.KEYS.SAVE_FILTERED_STRINGS,
+    true
+  );
+  const filteredStringsJson = JSON.stringify(result.filteredStrings, null, 2);
+
+  if (saveFilteredStrings) {
+    const ext = path.extname(targetFilePath);
+    const base = path.basename(targetFilePath, ext);
+    const dir = path.dirname(targetFilePath);
+    const filteredPath = path.join(dir, `${base}.filtered${ext}`);
+
+    fs.writeFileSync(filteredPath, filteredStringsJson, "utf8");
+
+    warningMessage += ` Saved to: ${filteredPath}`;
+    logWarning(warningMessage);
+  } else {
+    logWarning(`${warningMessage} Filtered strings:\n${filteredStringsJson}`);
+    warningMessage += ` Filtered strings are logged.`;
+  }
+
+  // Show notification without blocking parallel translations
+  setTimeout(() => {
+    const buttons =
+      result.finishReason === FinishReason.contentFilter
+        ? ["View Content Policy"]
+        : [];
+    vscode.window
+      .showWarningMessage(warningMessage, ...buttons)
+      .then((action) => {
+        if (action === "View Content Policy") {
+          vscode.env.openExternal(vscode.Uri.parse(URLS.CONTENT_POLICY));
+        }
+      });
+  }, 100);
 }
 
 async function showInformationMessage(message: string) {
@@ -317,9 +384,12 @@ async function showTranslationSuccess(
 ) {
   const charsUsed = result.usage.charsUsed || 0;
   const remainingBalance = result.remainingBalance || 0;
-  const message = `✅ Translation completed! Used ${charsUsed.toLocaleString()} characters. Remaining: ${remainingBalance.toLocaleString()} characters. File saved as ${path.basename(
-    targetFilePath
-  )}`;
+  let message = `✅ Translation completed! Used ${charsUsed.toLocaleString()} characters.`;
+  if (charsUsed > 0) {
+    message += ` Remaining: ${remainingBalance.toLocaleString()} characters. File saved as ${path.basename(
+      targetFilePath
+    )}`;
+  }
   logInfo(message);
 
   // Small delay to ensure progress dialog closes first
@@ -347,7 +417,7 @@ async function showSummaryForMultipleTranslations(
     );
   } else if (successCount > 0) {
     vscode.window.showWarningMessage(
-      `⚠️ Translated to ${successCount}/${totalLanguages} languages. Failed: ${failedLanguages.join(
+      `Translated to ${successCount}/${totalLanguages} languages. Failed: ${failedLanguages.join(
         ", "
       )}`
     );
@@ -356,4 +426,22 @@ async function showSummaryForMultipleTranslations(
       `❌ All translations failed. Please check the logs.`
     );
   }
+}
+
+function countAllKeys(obj: any): number {
+  let count = 0;
+  for (const key in obj) {
+    if (obj.hasOwnProperty(key)) {
+      const value = obj[key];
+
+      if (typeof value === "string") {
+        // Count only string values
+        count += 1;
+      } else if (typeof value === "object" && value !== null) {
+        // Recurse into both objects AND arrays
+        count += countAllKeys(value);
+      }
+    }
+  }
+  return count;
 }

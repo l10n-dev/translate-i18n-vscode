@@ -2,6 +2,11 @@ import { ApiKeyManager } from "./apiKeyManager";
 import { URLS } from "./constants";
 import { logInfo, logWarning, showAndLogError } from "./logger";
 
+export enum FileSchema {
+  OpenAPI = "openApi",
+  ARBFlutter = "arbFlutter",
+}
+
 // API Types based on the OpenAPI specification
 export interface TranslationRequest {
   sourceStrings: string;
@@ -13,6 +18,7 @@ export interface TranslationRequest {
   client: string;
   translateOnlyNewStrings?: boolean;
   targetStrings?: string;
+  schema: FileSchema | null;
 }
 
 export interface TranslationResult {
@@ -23,6 +29,7 @@ export interface TranslationResult {
   completedChunks: number;
   totalChunks: number;
   remainingBalance?: number;
+  filteredStrings?: Record<string, unknown>;
 }
 
 export interface TranslationUsage {
@@ -180,7 +187,7 @@ export class L10nTranslationService {
 
     const result = (await response.json()) as TranslationResult;
 
-    // Handle finish reasons by throwing errors
+    // Handle finish reasons
     if (result.finishReason) {
       if (result.finishReason !== FinishReason.stop) {
         logWarning(`Translation finished with reason: ${result.finishReason}`);
@@ -197,11 +204,9 @@ export class L10nTranslationService {
             URLS.PRICING
           );
           return null;
-        case FinishReason.contentFilter:
-          throw new Error("Translation blocked by content filter.");
         case FinishReason.error:
           throw new Error("Translation failed due to an error.");
-        // Note: FinishReason.length is not treated as an error - translation is still usable
+        // Note: FinishReason.contentFilter and FinishReason.length return partial results with filteredStrings
       }
     }
 
