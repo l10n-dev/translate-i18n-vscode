@@ -2,11 +2,13 @@ import * as assert from "assert";
 import * as sinon from "sinon";
 import * as vscode from "vscode";
 import { ApiKeyManager } from "../apiKeyManager";
+import { ILogger } from "../logger";
 
 suite("ApiKeyManager Configuration Migration Tests", () => {
   let mockContext: any;
   let mockSecrets: any;
   let mockConfiguration: any;
+  let mockLogger: ILogger;
   let apiKeyManager: ApiKeyManager;
 
   setup(() => {
@@ -14,12 +16,20 @@ suite("ApiKeyManager Configuration Migration Tests", () => {
     mockSecrets = {
       get: sinon.stub(),
       store: sinon.stub(),
+      delete: sinon.stub(),
     };
 
     // Mock VS Code configuration API
     mockConfiguration = {
       get: sinon.stub(),
       update: sinon.stub(),
+    };
+
+    // Mock logger
+    mockLogger = {
+      logInfo: sinon.stub(),
+      logWarning: sinon.stub(),
+      showAndLogError: sinon.stub(),
     };
 
     // Mock VS Code workspace API
@@ -31,7 +41,7 @@ suite("ApiKeyManager Configuration Migration Tests", () => {
       secrets: mockSecrets,
     };
 
-    apiKeyManager = new ApiKeyManager(mockContext);
+    apiKeyManager = new ApiKeyManager(mockContext, mockLogger);
   });
 
   teardown(() => {

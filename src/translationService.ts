@@ -1,6 +1,4 @@
-import { ApiKeyManager } from "./apiKeyManager";
-import { URLS } from "./constants";
-import { logInfo, logWarning, showAndLogError } from "./logger";
+import { ILogger } from "./logger";
 
 export enum FileSchema {
   OpenAPI = "openApi",
@@ -35,6 +33,7 @@ export interface TranslationResult {
    * The structure matches the source strings format.
    */
   filteredStrings?: Record<string, unknown>;
+  filteredStringsCount?: number;
 }
 
 export interface TranslationUsage {
@@ -59,12 +58,10 @@ export interface LanguagePredictionResponse {
 }
 
 export class L10nTranslationService {
-  private readonly baseUrl = URLS.API_BASE;
-  private readonly apiKeyManager: ApiKeyManager;
+  private readonly baseUrl = "https://l10n.dev/api";
+  private readonly pricingUrl = "https://l10n.dev/#pricing";
 
-  constructor(apiKeyManager: ApiKeyManager) {
-    this.apiKeyManager = apiKeyManager;
-  }
+  constructor(private readonly logger: ILogger) {}
 
   async predictLanguages(
     input: string,
@@ -74,16 +71,18 @@ export class L10nTranslationService {
     url.searchParams.append("input", input);
     url.searchParams.append("limit", limit.toString());
 
-    logInfo(`Predicting languages for input (${input.length} characters)`);
+    this.logger.logInfo(
+      `Predicting languages for input (${input.length} characters)`
+    );
 
     const response = await fetch(url.toString());
 
     if (!response.ok) {
+      this.logger.logWarning(
+        `Language prediction failed - ${response.status} ${response.statusText}`
+      );
       const error = new Error(
         `Failed to predict languages: ${response.statusText}`
-      );
-      logWarning(
-        `Language prediction failed - ${response.status} ${response.statusText}`
       );
       throw error;
     }
@@ -91,19 +90,23 @@ export class L10nTranslationService {
     const result: LanguagePredictionResponse =
       (await response.json()) as LanguagePredictionResponse;
 
-    logInfo(`Successfully predicted ${result.languages.length} languages`);
+    this.logger.logInfo(
+      `Successfully predicted ${result.languages.length} languages`
+    );
     return result.languages;
   }
 
   async translateJson(
-    request: TranslationRequest
+    request: TranslationRequest,
+    apiKey: string
   ): Promise<TranslationResult | null> {
-    const apiKey = await this.apiKeyManager.getApiKey();
     if (!apiKey) {
       throw new Error("API Key not set. Please configure your API Key first.");
     }
 
-    logInfo(`Starting translation to ${request.targetLanguageCode}`);
+    this.logger.logInfo(
+      `Starting translation to ${request.targetLanguageCode}`
+    );
 
     const response = await fetch(`${this.baseUrl}/translate`, {
       method: "POST",
@@ -125,11 +128,13 @@ export class L10nTranslationService {
         // Ignore JSON parsing errors
       }
 
-      logWarning(
+      this.logger.logWarning(
         `Translation API error - ${response.status} ${response.statusText}`
       );
       if (errorData) {
-        logWarning(`API error details - ${JSON.stringify(errorData)}`);
+        this.logger.logWarning(
+          `API error details - ${JSON.stringify(errorData)}`
+        );
       }
 
       switch (response.status) {
@@ -165,17 +170,17 @@ export class L10nTranslationService {
             message = `This translation requires ${requiredBalance.toLocaleString()} characters, but you only have ${currentBalance.toLocaleString()} characters available. You can try translating a smaller portion of your file or purchase more characters.`;
           }
 
-          showAndLogError(
+          this.logger.showAndLogError(
             message,
             errorData,
             "",
             "Visit l10n.dev",
-            URLS.PRICING
+            this.pricingUrl
           );
           return null;
         }
         case 413:
-          errorMessage = "Request too large. Maximum request size is 10 MB.";
+          errorMessage = "Request too large. Maximum request size is 5 MB.";
           break;
         case 500:
           errorMessage = `An internal server error occurred (Error code: ${
@@ -195,18 +200,20 @@ export class L10nTranslationService {
     // Handle finish reasons
     if (result.finishReason) {
       if (result.finishReason !== FinishReason.stop) {
-        logWarning(`Translation finished with reason: ${result.finishReason}`);
+        this.logger.logWarning(
+          `Translation finished with reason: ${result.finishReason}`
+        );
       }
 
       switch (result.finishReason) {
         case FinishReason.insufficientBalance:
           const message = `Not enough characters remaining for this translation. You can try translating a smaller portion of your file or purchase more characters.`;
-          showAndLogError(
+          this.logger.showAndLogError(
             message,
             undefined,
             "",
             "Visit l10n.dev",
-            URLS.PRICING
+            this.pricingUrl
           );
           return null;
         case FinishReason.error:
@@ -215,6 +222,29 @@ export class L10nTranslationService {
       }
     }
 
+    if (result.filteredStrings) {
+      const filteredCount = this.countAllKeys(result.filteredStrings);
+      result.filteredStringsCount = filteredCount;
+    }
+
     return result;
+  }
+
+  private countAllKeys(obj: any): number {
+    let count = 0;
+    for (const key in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        const value = obj[key];
+
+        if (typeof value === "string") {
+          // Count only string values
+          count += 1;
+        } else if (typeof value === "object" && value !== null) {
+          // Recurse into both objects AND arrays
+          count += this.countAllKeys(value);
+        }
+      }
+    }
+    return count;
   }
 }

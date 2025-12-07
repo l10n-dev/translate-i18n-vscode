@@ -1,14 +1,10 @@
-import { Language } from "./../translationService";
 import * as assert from "assert";
 import * as path from "path";
 import * as fs from "fs";
 import * as os from "os";
 
 // Import the I18nProjectManager and related types
-import {
-  I18nProjectManager,
-  ProjectStructureType,
-} from "../i18nProjectManager";
+import { I18nProjectManager } from "../i18nProjectManager";
 
 suite("I18nProjectManager Test Suite", () => {
   let tempDir: string;
@@ -36,7 +32,7 @@ suite("I18nProjectManager Test Suite", () => {
 
       const structure = detector.detectProjectStructure(sourceFile);
 
-      assert.strictEqual(structure.type, ProjectStructureType.FolderBased);
+      assert.strictEqual(structure.type, "folder");
       assert.strictEqual(structure.basePath, path.join(tempDir, "locales"));
       assert.strictEqual(structure.sourceLanguage, "en");
     });
@@ -50,7 +46,7 @@ suite("I18nProjectManager Test Suite", () => {
 
       const structure = detector.detectProjectStructure(sourceFile);
 
-      assert.strictEqual(structure.type, ProjectStructureType.FileBased);
+      assert.strictEqual(structure.type, "file");
       assert.strictEqual(structure.basePath, i18nDir);
       assert.strictEqual(structure.sourceLanguage, "en");
     });
@@ -64,7 +60,7 @@ suite("I18nProjectManager Test Suite", () => {
 
       const structure = detector.detectProjectStructure(sourceFile);
 
-      assert.strictEqual(structure.type, ProjectStructureType.FolderBased);
+      assert.strictEqual(structure.type, "folder");
       assert.strictEqual(structure.sourceLanguage, "zh-Hans-CN");
     });
 
@@ -77,7 +73,7 @@ suite("I18nProjectManager Test Suite", () => {
 
       const structure = detector.detectProjectStructure(sourceFile);
 
-      assert.strictEqual(structure.type, ProjectStructureType.Unknown);
+      assert.strictEqual(structure.type, "unknown");
       assert.strictEqual(structure.basePath, randomDir);
       assert.strictEqual(structure.sourceLanguage, undefined);
     });
@@ -282,7 +278,7 @@ suite("I18nProjectManager Test Suite", () => {
 
         const structure = detector.detectProjectStructure(sourceFile);
 
-        assert.strictEqual(structure.type, ProjectStructureType.FileBased);
+        assert.strictEqual(structure.type, "file");
         assert.strictEqual(structure.sourceLanguage, "en_US");
       });
 
@@ -294,7 +290,7 @@ suite("I18nProjectManager Test Suite", () => {
 
         const structure = detector.detectProjectStructure(sourceFile);
 
-        assert.strictEqual(structure.type, ProjectStructureType.FileBased);
+        assert.strictEqual(structure.type, "file");
         assert.strictEqual(structure.sourceLanguage, "fr");
       });
 
@@ -306,7 +302,7 @@ suite("I18nProjectManager Test Suite", () => {
 
         const structure = detector.detectProjectStructure(sourceFile);
 
-        assert.strictEqual(structure.type, ProjectStructureType.FileBased);
+        assert.strictEqual(structure.type, "file");
         assert.strictEqual(structure.sourceLanguage, "zh_Hans_CN");
       });
 
@@ -318,7 +314,7 @@ suite("I18nProjectManager Test Suite", () => {
 
         const structure = detector.detectProjectStructure(sourceFile);
 
-        assert.strictEqual(structure.type, ProjectStructureType.FileBased);
+        assert.strictEqual(structure.type, "file");
         assert.strictEqual(structure.sourceLanguage, "en_US");
       });
     });
@@ -464,7 +460,7 @@ suite("I18nProjectManager Test Suite", () => {
 
         const structure = detector.detectProjectStructure(sourceFile);
 
-        assert.strictEqual(structure.type, ProjectStructureType.FolderBased);
+        assert.strictEqual(structure.type, "folder");
         assert.strictEqual(
           structure.basePath,
           path.join(tempDir, "lib", "l10n")

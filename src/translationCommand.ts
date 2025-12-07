@@ -6,7 +6,6 @@ import * as fs from "fs";
 import * as path from "path";
 
 // Local service imports
-import { ApiKeyManager } from "./apiKeyManager";
 import { I18nProjectManager } from "./i18nProjectManager";
 import {
   FileSchema,
@@ -16,7 +15,7 @@ import {
   TranslationResult,
 } from "./translationService";
 import { LanguageSelector } from "./languageSelector";
-import { showAndLogError, logInfo, logWarning } from "./logger";
+import { ILogger } from "./logger";
 
 import { CONFIG, VSCODE_COMMANDS, URLS } from "./constants";
 
@@ -67,19 +66,14 @@ async function askTranslateOnlyNewStringsPreference(
  */
 export async function handleTranslateCommand(
   uri: vscode.Uri,
-  apiKeyManager: ApiKeyManager,
+  logger: ILogger,
+  apiKey: string,
   translationService: L10nTranslationService,
   i18nProjectManager: I18nProjectManager,
   languageSelector: LanguageSelector,
   isArbFile: boolean = false
 ) {
   try {
-    // Ensure we have an API Key (will prompt user if needed)
-    const apiKey = await apiKeyManager.ensureApiKey();
-    if (!apiKey) {
-      return; // User cancelled API Key setup
-    }
-
     // Get the file to translate
     let fileUri = uri || vscode.window.activeTextEditor?.document.uri;
 
@@ -88,12 +82,12 @@ export async function handleTranslateCommand(
 
     // If no valid file is available, prompt user to search and open one
     if (!fileUri || !fileUri.fsPath.endsWith(expectedExtension)) {
-      logInfo(`No selected ${fileType} file, opening Quick Open panel`);
+      logger.logInfo(`No selected ${fileType} file, opening Quick Open panel`);
 
       // Use VS Code's Quick Open panel (Ctrl+P equivalent)
       await vscode.commands.executeCommand(VSCODE_COMMANDS.QUICK_OPEN);
 
-      logInfo("Quick Open panel activated for user to search files");
+      logger.logInfo("Quick Open panel activated for user to search files");
 
       // Show a message to guide the user
       vscode.window.showInformationMessage(
@@ -129,7 +123,7 @@ export async function handleTranslateCommand(
       if (!i18nProjectManager.validateLanguageCode(targetLanguage)) {
         const message = `Invalid language code format: ${targetLanguage}. Please use BCP-47 format (e.g., en-US, en_US).`;
         vscode.window.showErrorMessage(message);
-        logInfo(`Validation error: ${message}`);
+        logger.logInfo(`Validation error: ${message}`);
         return;
       }
     }
@@ -154,7 +148,7 @@ export async function handleTranslateCommand(
       }
 
       translateOnlyNewStrings = choice === "update";
-      logInfo(
+      logger.logInfo(
         `User chose to ${
           choice === "update" ? "update existing files" : "create new files"
         } for ${targetLanguages.length} target language(s)`
@@ -169,23 +163,25 @@ export async function handleTranslateCommand(
         const targetFilePath = targetFilePaths[i];
 
         try {
-          logInfo(
+          logger.logInfo(
             `Translating (${i + 1}/${totalLanguages}) to ${targetLanguage}`
           );
 
           await performTranslation(
+            logger,
             fileUri.fsPath,
             targetLanguage,
             targetFilePath,
             translationService,
             i18nProjectManager,
+            apiKey,
             translateOnlyNewStrings,
             isArbFile ? FileSchema.ARBFlutter : null
           );
 
           return { success: true, language: targetLanguage };
         } catch (error) {
-          showAndLogError(
+          logger.showAndLogError(
             `Translation to ${targetLanguage} failed: ${
               error instanceof Error ? error.message : "Unknown error"
             }`,
@@ -213,7 +209,7 @@ export async function handleTranslateCommand(
       );
     }
   } catch (error) {
-    showAndLogError(
+    logger.showAndLogError(
       `Error: ${error instanceof Error ? error.message : "Unknown error"}`,
       error,
       "Translation command execution"
@@ -226,11 +222,13 @@ export async function handleTranslateCommand(
  * Reads file, calls translation service, and saves result
  */
 async function performTranslation(
+  logger: ILogger,
   sourceFilePath: string,
   targetLanguage: string,
   targetFilePath: string,
   translationService: L10nTranslationService,
   i18nProjectManager: I18nProjectManager,
+  apiKey: string,
   translateOnlyNewStrings: boolean,
   schema: FileSchema | null
 ) {
@@ -274,7 +272,7 @@ async function performTranslation(
         schema,
       };
 
-      const result = await translationService.translateJson(request);
+      const result = await translationService.translateJson(request, apiKey);
       if (!result) {
         const message = "Translation service returned no result.";
         throw new Error(message);
@@ -283,7 +281,7 @@ async function performTranslation(
       if (!result.translations) {
         const message =
           "No translation results received. Please verify that source file contains content.";
-        showInformationMessage(message);
+        await showInformationMessage(logger, message);
         return;
       }
 
@@ -305,16 +303,17 @@ async function performTranslation(
         result.filteredStrings &&
         Object.keys(result.filteredStrings).length > 0
       ) {
-        await handleFilteredStrings(result, outputPath);
+        await handleFilteredStrings(logger, result, outputPath);
       }
 
       // Show success message with usage info after progress completes
-      await showTranslationSuccess(result, outputPath);
+      await showTranslationSuccess(logger, result, outputPath);
     }
   );
 }
 
 async function handleFilteredStrings(
+  logger: ILogger,
   result: TranslationResult,
   targetFilePath: string
 ) {
@@ -327,15 +326,13 @@ async function handleFilteredStrings(
     return;
   }
 
-  const filteredCount = countAllKeys(result.filteredStrings);
-  let warningMessage = `${filteredCount} string(s) were excluded due to ${reasonMessage}.`;
-
   const config = vscode.workspace.getConfiguration(CONFIG.SECTION);
   const saveFilteredStrings = config.get(
     CONFIG.KEYS.SAVE_FILTERED_STRINGS,
     true
   );
   const filteredStringsJson = JSON.stringify(result.filteredStrings, null, 2);
+  let warningMessage = `${result.filteredStringsCount} string(s) were excluded due to ${reasonMessage}.`;
 
   if (saveFilteredStrings) {
     const ext = path.extname(targetFilePath);
@@ -346,9 +343,11 @@ async function handleFilteredStrings(
     fs.writeFileSync(filteredPath, filteredStringsJson, "utf8");
 
     warningMessage += ` Saved to: ${filteredPath}`;
-    logWarning(warningMessage);
+    logger.logWarning(warningMessage);
   } else {
-    logWarning(`${warningMessage} Filtered strings:\n${filteredStringsJson}`);
+    logger.logWarning(
+      `${warningMessage} Filtered strings:\n${filteredStringsJson}`
+    );
     warningMessage += ` Filtered strings are logged.`;
   }
 
@@ -368,8 +367,8 @@ async function handleFilteredStrings(
   }, 100);
 }
 
-async function showInformationMessage(message: string) {
-  logInfo(message);
+async function showInformationMessage(logger: ILogger, message: string) {
+  logger.logInfo(message);
   setTimeout(() => {
     vscode.window.showInformationMessage(message);
   }, 100); // Small delay to ensure progress dialog closes first
@@ -379,6 +378,7 @@ async function showInformationMessage(message: string) {
  * Shows translation success message with usage stats and option to open result file
  */
 async function showTranslationSuccess(
+  logger: ILogger,
   result: TranslationResult,
   targetFilePath: string
 ) {
@@ -390,7 +390,7 @@ async function showTranslationSuccess(
       targetFilePath
     )}`;
   }
-  logInfo(message);
+  logger.logInfo(message);
 
   // Small delay to ensure progress dialog closes first
   setTimeout(async () => {
@@ -426,22 +426,4 @@ async function showSummaryForMultipleTranslations(
       `❌ All translations failed. Please check the logs.`
     );
   }
-}
-
-function countAllKeys(obj: any): number {
-  let count = 0;
-  for (const key in obj) {
-    if (Object.prototype.hasOwnProperty.call(obj, key)) {
-      const value = obj[key];
-
-      if (typeof value === "string") {
-        // Count only string values
-        count += 1;
-      } else if (typeof value === "object" && value !== null) {
-        // Recurse into both objects AND arrays
-        count += countAllKeys(value);
-      }
-    }
-  }
-  return count;
 }

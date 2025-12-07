@@ -1,34 +1,11 @@
 import * as assert from "assert";
 import * as sinon from "sinon";
 import { URLS } from "../constants";
+import { ILogger } from "../logger";
 
 // Import the service and types
 const translationServiceModule = require("../translationService");
 const L10nTranslationService = translationServiceModule.L10nTranslationService;
-
-// Mock VS Code module
-const vscode = {
-  window: {
-    showInputBox: sinon.stub(),
-    showInformationMessage: sinon.stub(),
-  },
-  workspace: {
-    getConfiguration: sinon.stub(),
-  },
-  ConfigurationTarget: {
-    Global: 1,
-  },
-};
-
-// Mock require for vscode module
-const Module = require("module");
-const originalRequire = Module.prototype.require;
-Module.prototype.require = function (id: string) {
-  if (id === "vscode") {
-    return vscode;
-  }
-  return originalRequire.apply(this, arguments);
-};
 
 // Mock fetch globally
 const mockFetch = sinon.stub();
@@ -44,8 +21,7 @@ const mockFetch = sinon.stub();
 
 suite("L10nTranslationService Test Suite", () => {
   let service: any;
-  let mockConfiguration: any;
-  let mockApiKeyManager: any;
+  let mockLogger: ILogger;
 
   setup(() => {
     // Reset all stubs
@@ -54,28 +30,15 @@ suite("L10nTranslationService Test Suite", () => {
     // Reset fetch mock
     mockFetch.reset();
 
-    // Reset vscode mocks
-    vscode.window.showInputBox.reset();
-    vscode.window.showInformationMessage.reset();
-    vscode.workspace.getConfiguration.reset();
-
-    // Create mock configuration
-    mockConfiguration = {
-      get: sinon.stub(),
-      update: sinon.stub().resolves(),
+    // Create mock logger
+    mockLogger = {
+      logInfo: sinon.stub(),
+      logWarning: sinon.stub(),
+      showAndLogError: sinon.stub(),
     };
 
-    // Setup workspace configuration mock with default behavior
-    vscode.workspace.getConfiguration.returns(mockConfiguration);
-
-    // Create mock ApiKeyManager
-    mockApiKeyManager = {
-      getApiKey: sinon.stub(),
-      setApiKey: sinon.stub().resolves(),
-    };
-
-    // Create service instance with mocked ApiKeyManager
-    service = new L10nTranslationService(mockApiKeyManager);
+    // Create service instance with mocked logger only
+    service = new L10nTranslationService(mockLogger);
   });
 
   teardown(() => {
@@ -121,23 +84,23 @@ suite("L10nTranslationService Test Suite", () => {
 
   suite("JSON Translation", () => {
     test("translateJson throws error when no API Key is set", async () => {
-      mockApiKeyManager.getApiKey.resolves(undefined);
-
       await assert.rejects(
         async () =>
-          await service.translateJson({
-            sourceStrings: {},
-            targetLanguageCode: "es",
-            useContractions: false,
-            useShortening: false,
-          }),
+          await service.translateJson(
+            {
+              sourceStrings: {},
+              targetLanguageCode: "es",
+              useContractions: false,
+              useShortening: false,
+            },
+            "" // empty API key
+          ),
         /API Key not set. Please configure your API Key first./
       );
     });
 
     test("translateJson makes correct API call with valid API Key", async () => {
       const apiKey = "valid-api-key";
-      mockApiKeyManager.getApiKey.resolves(apiKey);
 
       const sourceStrings = { hello: "Hello", world: "World" };
       const targetLanguage = "es";
@@ -165,7 +128,7 @@ suite("L10nTranslationService Test Suite", () => {
 
       mockFetch.resolves(mockFetchResponse);
 
-      const result = await service.translateJson(request);
+      const result = await service.translateJson(request, apiKey);
 
       assert.deepStrictEqual(result, mockTranslationResult);
 
@@ -191,7 +154,6 @@ suite("L10nTranslationService Test Suite", () => {
 
     test("translateJson handles 400 Bad Request error", async () => {
       const apiKey = "valid-api-key";
-      mockApiKeyManager.getApiKey.resolves(apiKey);
 
       const mockErrorResponse = {
         ok: false,
@@ -205,19 +167,21 @@ suite("L10nTranslationService Test Suite", () => {
 
       await assert.rejects(
         async () =>
-          await service.translateJson({
-            sourceStrings: {},
-            targetLanguageCode: "es",
-            useContractions: false,
-            useShortening: false,
-          }),
+          await service.translateJson(
+            {
+              sourceStrings: {},
+              targetLanguageCode: "es",
+              useContractions: false,
+              useShortening: false,
+            },
+            apiKey
+          ),
         /Invalid source strings format/
       );
     });
 
     test("translateJson handles 401 Unauthorized error", async () => {
       const apiKey = "invalid-api-key";
-      mockApiKeyManager.getApiKey.resolves(apiKey);
 
       const mockErrorResponse = {
         ok: false,
@@ -229,19 +193,21 @@ suite("L10nTranslationService Test Suite", () => {
 
       await assert.rejects(
         async () =>
-          await service.translateJson({
-            sourceStrings: {},
-            targetLanguageCode: "es",
-            useContractions: false,
-            useShortening: false,
-          }),
+          await service.translateJson(
+            {
+              sourceStrings: {},
+              targetLanguageCode: "es",
+              useContractions: false,
+              useShortening: false,
+            },
+            apiKey
+          ),
         /Unauthorized. Please check your API Key./
       );
     });
 
     test("translateJson handles 402 Payment Required error with specific message", async () => {
       const apiKey = "valid-api-key";
-      mockApiKeyManager.getApiKey.resolves(apiKey);
 
       const mockErrorResponse = {
         ok: false,
@@ -255,12 +221,15 @@ suite("L10nTranslationService Test Suite", () => {
 
       mockFetch.resolves(mockErrorResponse);
 
-      const result = await service.translateJson({
-        sourceStrings: {},
-        targetLanguageCode: "es",
-        useContractions: false,
-        useShortening: false,
-      });
+      const result = await service.translateJson(
+        {
+          sourceStrings: {},
+          targetLanguageCode: "es",
+          useContractions: false,
+          useShortening: false,
+        },
+        apiKey
+      );
 
       // 402 errors now return null instead of throwing
       assert.strictEqual(result, null);
@@ -268,7 +237,6 @@ suite("L10nTranslationService Test Suite", () => {
 
     test("translateJson handles 413 Request Too Large error", async () => {
       const apiKey = "valid-api-key";
-      mockApiKeyManager.getApiKey.resolves(apiKey);
 
       const mockErrorResponse = {
         ok: false,
@@ -280,19 +248,21 @@ suite("L10nTranslationService Test Suite", () => {
 
       await assert.rejects(
         async () =>
-          await service.translateJson({
-            sourceStrings: {},
-            targetLanguageCode: "es",
-            useContractions: false,
-            useShortening: false,
-          }),
-        /Request too large. Maximum request size is 10 MB./
+          await service.translateJson(
+            {
+              sourceStrings: {},
+              targetLanguageCode: "es",
+              useContractions: false,
+              useShortening: false,
+            },
+            apiKey
+          ),
+        /Request too large. Maximum request size is 5 MB./
       );
     });
 
     test("translateJson handles 500 Internal Server Error", async () => {
       const apiKey = "valid-api-key";
-      mockApiKeyManager.getApiKey.resolves(apiKey);
 
       const mockErrorResponse = {
         ok: false,
@@ -306,12 +276,15 @@ suite("L10nTranslationService Test Suite", () => {
 
       await assert.rejects(
         async () =>
-          await service.translateJson({
-            sourceStrings: {},
-            targetLanguageCode: "es",
-            useContractions: false,
-            useShortening: false,
-          }),
+          await service.translateJson(
+            {
+              sourceStrings: {},
+              targetLanguageCode: "es",
+              useContractions: false,
+              useShortening: false,
+            },
+            apiKey
+          ),
         /An internal server error occurred \(Error code: INTERNAL_ERROR_123\)/
       );
     });
@@ -320,7 +293,6 @@ suite("L10nTranslationService Test Suite", () => {
   suite("Error Handling", () => {
     test("handles complex validation error structure", async () => {
       const apiKey = "valid-api-key";
-      mockApiKeyManager.getApiKey.resolves(apiKey);
 
       const mockErrorResponse = {
         ok: false,
@@ -337,19 +309,21 @@ suite("L10nTranslationService Test Suite", () => {
 
       await assert.rejects(
         async () =>
-          await service.translateJson({
-            sourceStrings: {},
-            targetLanguageCode: "es",
-            useContractions: false,
-            useShortening: false,
-          }),
+          await service.translateJson(
+            {
+              sourceStrings: {},
+              targetLanguageCode: "es",
+              useContractions: false,
+              useShortening: false,
+            },
+            apiKey
+          ),
         /is required is invalid must be BCP-47 format/
       );
     });
 
     test("handles array validation error structure", async () => {
       const apiKey = "valid-api-key";
-      mockApiKeyManager.getApiKey.resolves(apiKey);
 
       const mockErrorResponse = {
         ok: false,
@@ -363,19 +337,21 @@ suite("L10nTranslationService Test Suite", () => {
 
       await assert.rejects(
         async () =>
-          await service.translateJson({
-            sourceStrings: {},
-            targetLanguageCode: "es",
-            useContractions: false,
-            useShortening: false,
-          }),
+          await service.translateJson(
+            {
+              sourceStrings: {},
+              targetLanguageCode: "es",
+              useContractions: false,
+              useShortening: false,
+            },
+            apiKey
+          ),
         /Field validation failed Invalid input format/
       );
     });
 
     test("handles JSON parsing failure in error response", async () => {
       const apiKey = "valid-api-key";
-      mockApiKeyManager.getApiKey.resolves(apiKey);
 
       const mockErrorResponse = {
         ok: false,
@@ -387,12 +363,15 @@ suite("L10nTranslationService Test Suite", () => {
 
       await assert.rejects(
         async () =>
-          await service.translateJson({
-            sourceStrings: {},
-            targetLanguageCode: "es",
-            useContractions: false,
-            useShortening: false,
-          }),
+          await service.translateJson(
+            {
+              sourceStrings: {},
+              targetLanguageCode: "es",
+              useContractions: false,
+              useShortening: false,
+            },
+            apiKey
+          ),
         /An internal server error occurred \(Error code: unknown\)/
       );
     });
@@ -401,7 +380,6 @@ suite("L10nTranslationService Test Suite", () => {
   suite("Finish Reason Handling", () => {
     test("handles insufficientBalance finish reason", async () => {
       const apiKey = "valid-api-key";
-      mockApiKeyManager.getApiKey.resolves(apiKey);
 
       const mockResponse = {
         ok: true,
@@ -417,12 +395,15 @@ suite("L10nTranslationService Test Suite", () => {
 
       mockFetch.resolves(mockResponse);
 
-      const result = await service.translateJson({
-        sourceStrings: {},
-        targetLanguageCode: "es",
-        useContractions: false,
-        useShortening: false,
-      });
+      const result = await service.translateJson(
+        {
+          sourceStrings: {},
+          targetLanguageCode: "es",
+          useContractions: false,
+          useShortening: false,
+        },
+        apiKey
+      );
 
       // insufficientBalance finish reason now returns null instead of throwing
       assert.strictEqual(result, null);
@@ -430,7 +411,6 @@ suite("L10nTranslationService Test Suite", () => {
 
     test("throws error for error finish reason", async () => {
       const apiKey = "valid-api-key";
-      mockApiKeyManager.getApiKey.resolves(apiKey);
 
       const mockResponse = {
         ok: true,
@@ -448,19 +428,21 @@ suite("L10nTranslationService Test Suite", () => {
 
       await assert.rejects(
         async () =>
-          await service.translateJson({
-            sourceStrings: {},
-            targetLanguageCode: "es",
-            useContractions: false,
-            useShortening: false,
-          }),
+          await service.translateJson(
+            {
+              sourceStrings: {},
+              targetLanguageCode: "es",
+              useContractions: false,
+              useShortening: false,
+            },
+            apiKey
+          ),
         /Translation failed due to an error\./
       );
     });
 
     test("does not throw error for length finish reason", async () => {
       const apiKey = "valid-api-key";
-      mockApiKeyManager.getApiKey.resolves(apiKey);
 
       const expectedResult = {
         targetLanguageCode: "es",
@@ -479,18 +461,20 @@ suite("L10nTranslationService Test Suite", () => {
 
       mockFetch.resolves(mockResponse);
 
-      const result = await service.translateJson({
-        sourceStrings: {},
-        targetLanguageCode: "es",
-        useContractions: false,
-        useShortening: false,
-      });
+      const result = await service.translateJson(
+        {
+          sourceStrings: {},
+          targetLanguageCode: "es",
+          useContractions: false,
+          useShortening: false,
+        },
+        apiKey
+      );
       assert.deepStrictEqual(result, expectedResult);
     });
 
     test("does not throw error for contentFilter finish reason", async () => {
       const apiKey = "valid-api-key";
-      mockApiKeyManager.getApiKey.resolves(apiKey);
 
       const expectedResult = {
         targetLanguageCode: "es",
@@ -509,18 +493,20 @@ suite("L10nTranslationService Test Suite", () => {
 
       mockFetch.resolves(mockResponse);
 
-      const result = await service.translateJson({
-        sourceStrings: {},
-        targetLanguageCode: "es",
-        useContractions: false,
-        useShortening: false,
-      });
+      const result = await service.translateJson(
+        {
+          sourceStrings: {},
+          targetLanguageCode: "es",
+          useContractions: false,
+          useShortening: false,
+        },
+        apiKey
+      );
       assert.deepStrictEqual(result, expectedResult);
     });
 
     test("does not throw error for stop finish reason", async () => {
       const apiKey = "valid-api-key";
-      mockApiKeyManager.getApiKey.resolves(apiKey);
 
       const expectedResult = {
         targetLanguageCode: "es",
@@ -538,18 +524,20 @@ suite("L10nTranslationService Test Suite", () => {
 
       mockFetch.resolves(mockResponse);
 
-      const result = await service.translateJson({
-        sourceStrings: {},
-        targetLanguageCode: "es",
-        useContractions: false,
-        useShortening: false,
-      });
+      const result = await service.translateJson(
+        {
+          sourceStrings: {},
+          targetLanguageCode: "es",
+          useContractions: false,
+          useShortening: false,
+        },
+        apiKey
+      );
       assert.deepStrictEqual(result, expectedResult);
     });
 
     test("works normally when no finish reason is present", async () => {
       const apiKey = "valid-api-key";
-      mockApiKeyManager.getApiKey.resolves(apiKey);
 
       const expectedResult = {
         targetLanguageCode: "es",
@@ -566,12 +554,15 @@ suite("L10nTranslationService Test Suite", () => {
 
       mockFetch.resolves(mockResponse);
 
-      const result = await service.translateJson({
-        sourceStrings: {},
-        targetLanguageCode: "es",
-        useContractions: false,
-        useShortening: false,
-      });
+      const result = await service.translateJson(
+        {
+          sourceStrings: {},
+          targetLanguageCode: "es",
+          useContractions: false,
+          useShortening: false,
+        },
+        apiKey
+      );
       assert.deepStrictEqual(result, expectedResult);
     });
   });

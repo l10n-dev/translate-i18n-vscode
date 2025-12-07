@@ -1,13 +1,13 @@
 import * as path from "path";
 import * as fs from "fs";
 
-export enum ProjectStructureType {
+enum ProjectStructureType {
   FolderBased = "folder",
   FileBased = "file",
   Unknown = "unknown",
 }
 
-export interface ProjectStructureInfo {
+interface ProjectStructureInfo {
   type: ProjectStructureType;
   basePath: string;
   sourceLanguage?: string;
