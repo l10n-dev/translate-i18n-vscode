@@ -1,6 +1,7 @@
 // Configuration constants shared across the extension
 export const CONFIG = {
   SECTION: "l10n-translate-i18n",
+  CLIENT: "vscode-extension",
   KEYS: {
     API_KEY: "apiKey",
     USE_CONTRACTIONS: "useContractions",

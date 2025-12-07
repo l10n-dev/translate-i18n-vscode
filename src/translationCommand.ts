@@ -265,7 +265,7 @@ async function performTranslation(
           CONFIG.KEYS.GENERATE_PLURAL_FORMS,
           false
         ),
-        client: "vscode-extension",
+        client: CONFIG.CLIENT,
         returnTranslationsAsString: true,
         translateOnlyNewStrings,
         targetStrings,
