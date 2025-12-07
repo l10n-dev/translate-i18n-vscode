@@ -566,4 +566,236 @@ suite("L10nTranslationService Test Suite", () => {
       assert.deepStrictEqual(result, expectedResult);
     });
   });
+
+  suite("Filtered Strings Count", () => {
+    test("counts filtered strings correctly for flat structure", async () => {
+      const apiKey = "valid-api-key";
+
+      const apiResponse = {
+        targetLanguageCode: "es",
+        translations: { hello: "hola", world: "mundo" },
+        usage: { charsUsed: 5 },
+        finishReason: "contentFilter",
+        filteredStrings: {
+          badWord1: "inappropriate content",
+          badWord2: "another bad word",
+          badWord3: "offensive term",
+        },
+        completedChunks: 1,
+        totalChunks: 1,
+      };
+
+      const mockResponse = {
+        ok: true,
+        json: sinon.stub().resolves(apiResponse),
+      };
+
+      mockFetch.resolves(mockResponse);
+
+      const result = await service.translateJson(
+        {
+          sourceStrings: {},
+          targetLanguageCode: "es",
+          useContractions: false,
+          useShortening: false,
+        },
+        apiKey
+      );
+
+      assert.strictEqual(result?.filteredStringsCount, 3);
+    });
+
+    test("counts filtered strings correctly for nested structure", async () => {
+      const apiKey = "valid-api-key";
+
+      const apiResponse = {
+        targetLanguageCode: "es",
+        translations: { hello: "hola" },
+        usage: { charsUsed: 5 },
+        finishReason: "length",
+        filteredStrings: {
+          section1: {
+            key1: "value1",
+            key2: "value2",
+          },
+          section2: {
+            nested: {
+              deep1: "value3",
+              deep2: "value4",
+            },
+            key3: "value5",
+          },
+        },
+        completedChunks: 1,
+        totalChunks: 1,
+      };
+
+      const mockResponse = {
+        ok: true,
+        json: sinon.stub().resolves(apiResponse),
+      };
+
+      mockFetch.resolves(mockResponse);
+
+      const result = await service.translateJson(
+        {
+          sourceStrings: {},
+          targetLanguageCode: "es",
+          useContractions: false,
+          useShortening: false,
+        },
+        apiKey
+      );
+
+      assert.strictEqual(result?.filteredStringsCount, 5);
+    });
+
+    test("counts filtered strings correctly with mixed array structure", async () => {
+      const apiKey = "valid-api-key";
+
+      const apiResponse = {
+        targetLanguageCode: "es",
+        translations: { hello: "hola" },
+        usage: { charsUsed: 5 },
+        finishReason: "contentFilter",
+        filteredStrings: {
+          items: ["item1", "item2", "item3"],
+          nested: {
+            array: ["nested1", "nested2"],
+          },
+          single: "single value",
+        },
+        completedChunks: 1,
+        totalChunks: 1,
+      };
+
+      const mockResponse = {
+        ok: true,
+        json: sinon.stub().resolves(apiResponse),
+      };
+
+      mockFetch.resolves(mockResponse);
+
+      const result = await service.translateJson(
+        {
+          sourceStrings: {},
+          targetLanguageCode: "es",
+          useContractions: false,
+          useShortening: false,
+        },
+        apiKey
+      );
+
+      assert.strictEqual(result?.filteredStringsCount, 6);
+    });
+
+    test("returns zero count for empty filtered strings", async () => {
+      const apiKey = "valid-api-key";
+
+      const apiResponse = {
+        targetLanguageCode: "es",
+        translations: { hello: "hola" },
+        usage: { charsUsed: 5 },
+        finishReason: "contentFilter",
+        filteredStrings: {},
+        completedChunks: 1,
+        totalChunks: 1,
+      };
+
+      const mockResponse = {
+        ok: true,
+        json: sinon.stub().resolves(apiResponse),
+      };
+
+      mockFetch.resolves(mockResponse);
+
+      const result = await service.translateJson(
+        {
+          sourceStrings: {},
+          targetLanguageCode: "es",
+          useContractions: false,
+          useShortening: false,
+        },
+        apiKey
+      );
+
+      assert.strictEqual(result?.filteredStringsCount, 0);
+    });
+
+    test("does not add filteredStringsCount when no filtered strings present", async () => {
+      const apiKey = "valid-api-key";
+
+      const apiResponse = {
+        targetLanguageCode: "es",
+        translations: { hello: "hola" },
+        usage: { charsUsed: 5 },
+        finishReason: "stop",
+        completedChunks: 1,
+        totalChunks: 1,
+      };
+
+      const mockResponse = {
+        ok: true,
+        json: sinon.stub().resolves(apiResponse),
+      };
+
+      mockFetch.resolves(mockResponse);
+
+      const result = await service.translateJson(
+        {
+          sourceStrings: {},
+          targetLanguageCode: "es",
+          useContractions: false,
+          useShortening: false,
+        },
+        apiKey
+      );
+
+      assert.strictEqual(result?.filteredStringsCount, undefined);
+    });
+
+    test("ignores non-string values in count", async () => {
+      const apiKey = "valid-api-key";
+
+      const apiResponse = {
+        targetLanguageCode: "es",
+        translations: { hello: "hola" },
+        usage: { charsUsed: 5 },
+        finishReason: "contentFilter",
+        filteredStrings: {
+          string1: "value1",
+          number: 123,
+          boolean: true,
+          nullValue: null,
+          string2: "value2",
+          nested: {
+            string3: "value3",
+            number2: 456,
+          },
+        },
+        completedChunks: 1,
+        totalChunks: 1,
+      };
+
+      const mockResponse = {
+        ok: true,
+        json: sinon.stub().resolves(apiResponse),
+      };
+
+      mockFetch.resolves(mockResponse);
+
+      const result = await service.translateJson(
+        {
+          sourceStrings: {},
+          targetLanguageCode: "es",
+          useContractions: false,
+          useShortening: false,
+        },
+        apiKey
+      );
+
+      // Should only count string1, string2, and string3 (3 string values)
+      assert.strictEqual(result?.filteredStringsCount, 3);
+    });
+  });
 });
