@@ -318,9 +318,9 @@ async function handleFilteredStrings(
   targetFilePath: string
 ) {
   let reasonMessage: string;
-  if (result.finishReason === "contentFilter") {
+  if (result.finishReason === FinishReason.contentFilter) {
     reasonMessage = "content policy violations";
-  } else if (result.finishReason === "length") {
+  } else if (result.finishReason === FinishReason.length) {
     reasonMessage = "AI context limit was reached (content too long)";
   } else {
     return;
