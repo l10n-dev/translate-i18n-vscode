@@ -29,6 +29,11 @@ export interface TranslationResult {
   completedChunks: number;
   totalChunks: number;
   remainingBalance?: number;
+  /**
+   * Source strings that were filtered out due to content policy violations or length limits.
+   * Populated when the finish reason is 'contentFilter' or 'length'.
+   * The structure matches the source strings format.
+   */
   filteredStrings?: Record<string, unknown>;
 }
 
