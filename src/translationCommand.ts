@@ -345,7 +345,7 @@ async function handleFilteredStrings(
     warningMessage += ` Saved to: ${filteredPath}`;
     logger.logWarning(warningMessage);
   } else {
-    logger.logWarning(
+    logger.logInfo(
       `${warningMessage} Filtered strings:\n${filteredStringsJson}`
     );
     warningMessage += ` Filtered strings are logged.`;
