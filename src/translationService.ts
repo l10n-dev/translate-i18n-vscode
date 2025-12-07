@@ -1,7 +1,13 @@
 import { ILogger } from "./logger";
 
+/**
+ * Supported file schema formats for translation requests.
+ * Used to enable schema-specific translation handling.
+ */
 export enum FileSchema {
+  /** OpenAPI specification format */
   OpenAPI = "openApi",
+  /** Flutter ARB (Application Resource Bundle) format */
   ARBFlutter = "arbFlutter",
 }
 
