@@ -1,20 +1,14 @@
 // Configuration constants shared across the extension
 export const CONFIG = {
   SECTION: "l10n-translate-i18n",
+  CLIENT: "vscode-extension",
   KEYS: {
     API_KEY: "apiKey",
     USE_CONTRACTIONS: "useContractions",
     USE_SHORTENING: "useShortening",
     GENERATE_PLURAL_FORMS: "generatePluralForms",
+    SAVE_FILTERED_STRINGS: "saveFilteredStrings",
   },
-} as const;
-
-// URL constants for l10n.dev service
-export const URLS = {
-  BASE: "https://l10n.dev",
-  API_BASE: "https://l10n.dev/api",
-  API_KEYS: "https://l10n.dev/ws/keys",
-  PRICING: "https://l10n.dev/#pricing",
 } as const;
 
 // State keys for extension storage

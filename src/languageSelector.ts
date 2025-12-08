@@ -1,6 +1,5 @@
 import * as vscode from "vscode";
-import { L10nTranslationService } from "./translationService";
-import { showAndLogError } from "./logger";
+import { L10nTranslationService } from "ai-l10n";
 
 export class LanguageSelector {
   constructor(private readonly translationService: L10nTranslationService) {}
@@ -96,43 +95,33 @@ export class LanguageSelector {
       return null; // User cancelled
     }
 
-    try {
-      // Predict languages using API
-      const predictedLanguages = await this.translationService.predictLanguages(
-        searchInput
-      );
+    // Predict languages using API
+    const predictedLanguages = await this.translationService.predictLanguages(
+      searchInput
+    );
 
-      if (predictedLanguages.length === 0) {
-        vscode.window.showWarningMessage("No languages found for your search.");
-        return undefined;
-      }
-
-      const languageOptions = predictedLanguages.map((lang) => ({
-        label: useUnderscores ? lang.code.replace(/-/g, "_") : lang.code,
-        description: lang.name,
-      }));
-
-      const languageSelection = await vscode.window.showQuickPick(
-        languageOptions,
-        {
-          placeHolder: "Select target language",
-        }
-      );
-
-      if (!languageSelection) {
-        return null; // User cancelled
-      }
-
-      return languageSelection.label;
-    } catch (error) {
-      showAndLogError(
-        `Failed to search languages: ${
-          error instanceof Error ? error.message : "Unknown error"
-        }`,
-        error
-      );
+    if (predictedLanguages.length === 0) {
+      vscode.window.showWarningMessage("No languages found for your search.");
       return undefined;
     }
+
+    const languageOptions = predictedLanguages.map((lang) => ({
+      label: useUnderscores ? lang.code.replace(/-/g, "_") : lang.code,
+      description: lang.name,
+    }));
+
+    const languageSelection = await vscode.window.showQuickPick(
+      languageOptions,
+      {
+        placeHolder: "Select target language",
+      }
+    );
+
+    if (!languageSelection) {
+      return null; // User cancelled
+    }
+
+    return languageSelection.label;
   }
 
   private async showManualLanguageInput(): Promise<string | undefined> {

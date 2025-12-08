@@ -2,6 +2,34 @@
 
 All notable changes to the "Translate I18n JSON/ARB by l10n.dev" extension will be documented in this file.
 
+## [1.6.0] - 2025-12-08
+
+### Added
+- 🛡️ **Content Policy Filtering**: Automatic filtering of strings that violate content policies during translation
+- 📊 **Filtered Strings Management**: Option to save filtered strings to separate `.filtered.json` or `.filtered.arb` files
+- ⚙️ **Configurable Filtering Behavior**: New `saveFilteredStrings` setting (default: true) to control how filtered content is handled
+- 📝 **Detailed Logging**: Filtered strings are logged to the output panel when file saving is disabled
+- ⚠️ **Length Limit Handling**: Graceful handling of translations that exceed AI context limits with partial results
+
+### Changed
+- 🔄 **Partial Translation Support**: Translations with filtered content now return partial results instead of failing completely
+- 💬 **Enhanced Notifications**: Clear warning messages when content is filtered due to policy violations or length limits
+- 🔗 **Contextual Help**: Direct links to content policy documentation for policy violations
+
+### Technical Details
+- Added `filteredStrings` field to `TranslationResult` containing excluded source strings in JSON format
+- Updated `FinishReason` handling: `contentFilter` and `length` now return partial results with filtered data
+- Non-blocking notifications ensure parallel translations continue smoothly
+- Filtered files are saved with `.filtered` suffix (e.g., `en.filtered.json`, `app_en.filtered.arb`)
+
+### Configuration
+- **l10n-translate-i18n.saveFilteredStrings**: Save filtered strings to separate files (default: true)
+
+### Notes
+- **Content Policy**: Filtered strings are those that violated [l10n.dev content policies](https://l10n.dev/terms-of-service#content-policy)
+- **Length Limits**: When AI context limits are reached, untranslated strings are saved to filtered files
+- **Batch Translation**: Filtering works seamlessly with parallel batch translations without interrupting the workflow
+
 ## [1.5.1] - 2025-11-17
 
 ### Changed

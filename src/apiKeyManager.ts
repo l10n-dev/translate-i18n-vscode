@@ -1,14 +1,14 @@
 import * as vscode from "vscode";
-import { CONFIG, URLS } from "./constants";
-import { logInfo } from "./logger";
+import { CONFIG } from "./constants";
+import { ILogger, URLS } from "ai-l10n";
 
 export class ApiKeyManager {
-  private readonly context: vscode.ExtensionContext;
   private readonly SECRET_KEY = `${CONFIG.SECTION}.${CONFIG.KEYS.API_KEY}`;
 
-  constructor(context: vscode.ExtensionContext) {
-    this.context = context;
-  }
+  constructor(
+    private readonly context: vscode.ExtensionContext,
+    private readonly logger: ILogger
+  ) {}
 
   async getApiKey(): Promise<string | undefined> {
     // Check both secure storage and configuration
@@ -20,7 +20,9 @@ export class ApiKeyManager {
     // If user has set a new API Key in configuration, it takes precedence
     // This allows users to update expired keys through settings UI
     if (configApiKey?.trim() && configApiKey !== secureApiKey) {
-      logInfo("API Key found in configuration, migrating to secure storage");
+      this.logger.logInfo(
+        "API Key found in configuration, migrating to secure storage"
+      );
 
       // Update secure storage
       await this.context.secrets.store(this.SECRET_KEY, configApiKey);
@@ -42,13 +44,13 @@ export class ApiKeyManager {
         );
       }
 
-      logInfo("API Key migrated to secure storage");
+      this.logger.logInfo("API Key migrated to secure storage");
 
       return configApiKey;
     }
 
     if (!secureApiKey) {
-      logInfo("No API Key found");
+      this.logger.logInfo("No API Key found");
     }
     return secureApiKey;
   }
@@ -82,7 +84,9 @@ export class ApiKeyManager {
    * Useful for resetting expired or invalid keys
    */
   async clearApiKey(): Promise<void> {
-    logInfo("Clearing API Key from secure storage and configuration");
+    this.logger.logInfo(
+      "Clearing API Key from secure storage and configuration"
+    );
 
     // Clear from secure storage
     await this.context.secrets.delete(this.SECRET_KEY);
@@ -96,7 +100,9 @@ export class ApiKeyManager {
         vscode.ConfigurationTarget.Global
       );
 
-    logInfo("API Key cleared successfully from all storage locations");
+    this.logger.logInfo(
+      "API Key cleared successfully from all storage locations"
+    );
 
     vscode.window.showInformationMessage(
       "API Key cleared. You can set a new one in the extension settings or using the 'Set API Key' command."
@@ -104,7 +110,7 @@ export class ApiKeyManager {
   }
 
   async setApiKey(): Promise<string | undefined> {
-    logInfo("User requested to set new API Key");
+    this.logger.logInfo("User requested to set new API Key");
 
     const apiKey = await vscode.window.showInputBox({
       prompt: "Enter your l10n.dev API Key",
@@ -116,11 +122,11 @@ export class ApiKeyManager {
     if (apiKey) {
       await this.context.secrets.store(this.SECRET_KEY, apiKey);
 
-      logInfo("New API Key stored securely");
+      this.logger.logInfo("New API Key stored securely");
 
       vscode.window.showInformationMessage("API Key saved securely! 🔐");
     } else {
-      logInfo("API Key setup cancelled by user");
+      this.logger.logInfo("API Key setup cancelled by user");
     }
 
     return apiKey;

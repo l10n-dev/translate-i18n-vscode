@@ -3,18 +3,12 @@ import * as vscode from "vscode";
 
 // Local service imports
 import { ApiKeyManager } from "./apiKeyManager";
-import { I18nProjectManager } from "./i18nProjectManager";
-import { L10nTranslationService } from "./translationService";
+import { I18nProjectManager, L10nTranslationService, URLS } from "ai-l10n";
 import { LanguageSelector } from "./languageSelector";
 import { handleTranslateCommand } from "./translationCommand";
 
-import {
-  COMMANDS,
-  VSCODE_COMMANDS,
-  STATE_KEYS,
-  URLS,
-  CONFIG,
-} from "./constants";
+import { COMMANDS, VSCODE_COMMANDS, STATE_KEYS, CONFIG } from "./constants";
+import { OutputChannelLogger } from "./outputChannelLogger";
 
 /**
  * Main extension activation function
@@ -23,8 +17,9 @@ import {
 export function activate(context: vscode.ExtensionContext) {
   console.log("l10n.dev Translation extension is now active!");
 
-  const apiKeyManager = new ApiKeyManager(context);
-  const translationService = new L10nTranslationService(apiKeyManager);
+  const logger = new OutputChannelLogger();
+  const apiKeyManager = new ApiKeyManager(context, logger);
+  const translationService = new L10nTranslationService(logger);
   const i18nProjectManager = new I18nProjectManager();
   const languageSelector = new LanguageSelector(translationService);
 
@@ -34,6 +29,7 @@ export function activate(context: vscode.ExtensionContext) {
   registerCommands(
     context,
     apiKeyManager,
+    logger,
     translationService,
     i18nProjectManager,
     languageSelector
@@ -71,6 +67,7 @@ function setupWelcomeMessage(context: vscode.ExtensionContext) {
 function registerCommands(
   context: vscode.ExtensionContext,
   apiKeyManager: ApiKeyManager,
+  logger: OutputChannelLogger,
   translationService: L10nTranslationService,
   i18nProjectManager: I18nProjectManager,
   languageSelector: LanguageSelector
@@ -113,29 +110,43 @@ function registerCommands(
   // Register translate command
   const translateDisposable = vscode.commands.registerCommand(
     COMMANDS.TRANSLATE,
-    async (uri: vscode.Uri) =>
+    async (uri: vscode.Uri) => {
+      // Ensure we have an API Key (will prompt user if needed)
+      const apiKey = await apiKeyManager.ensureApiKey();
+      if (!apiKey) {
+        return; // User cancelled API Key setup
+      }
       await handleTranslateCommand(
         uri,
-        apiKeyManager,
+        logger,
+        apiKey,
         translationService,
         i18nProjectManager,
         languageSelector,
         false // isArbFile
-      )
+      );
+    }
   );
 
   // Register translate ARB command
   const translateArbDisposable = vscode.commands.registerCommand(
     COMMANDS.TRANSLATE_ARB,
-    async (uri: vscode.Uri) =>
+    async (uri: vscode.Uri) => {
+      // Ensure we have an API Key (will prompt user if needed)
+      const apiKey = await apiKeyManager.ensureApiKey();
+      if (!apiKey) {
+        return; // User cancelled API Key setup
+      }
       await handleTranslateCommand(
         uri,
-        apiKeyManager,
+        logger,
+        apiKey,
         translationService,
         i18nProjectManager,
         languageSelector,
         true // isArbFile
-      )
+      );
+    }
   );
 
   context.subscriptions.push(
