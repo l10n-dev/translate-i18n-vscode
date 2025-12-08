@@ -3,18 +3,11 @@ import * as vscode from "vscode";
 
 // Local service imports
 import { ApiKeyManager } from "./apiKeyManager";
-import { I18nProjectManager } from "./i18nProjectManager";
-import { L10nTranslationService } from "./translationService";
+import { I18nProjectManager, L10nTranslationService, URLS } from "ai-l10n";
 import { LanguageSelector } from "./languageSelector";
 import { handleTranslateCommand } from "./translationCommand";
 
-import {
-  COMMANDS,
-  VSCODE_COMMANDS,
-  STATE_KEYS,
-  URLS,
-  CONFIG,
-} from "./constants";
+import { COMMANDS, VSCODE_COMMANDS, STATE_KEYS, CONFIG } from "./constants";
 import { OutputChannelLogger } from "./outputChannelLogger";
 
 /**

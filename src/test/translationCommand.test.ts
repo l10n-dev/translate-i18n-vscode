@@ -5,7 +5,7 @@ import * as vscode from "vscode";
 // Import the translation command handler
 import { handleTranslateCommand } from "../translationCommand";
 import { VSCODE_COMMANDS } from "../constants";
-import { ILogger } from "../logger";
+import { ILogger } from "ai-l10n";
 
 suite("Translation Command Tests", () => {
   let mockLogger: ILogger;
@@ -22,7 +22,7 @@ suite("Translation Command Tests", () => {
     };
 
     mockTranslationService = {
-      translateJson: sinon.stub(),
+      translate: sinon.stub(),
     };
 
     mockI18nProjectManager = {
@@ -196,7 +196,7 @@ suite("Translation Command Tests", () => {
       sinon.stub(fs, "existsSync").returns(false);
       sinon.stub(fs, "writeFileSync");
 
-      mockTranslationService.translateJson.resolves({
+      mockTranslationService.translate.resolves({
         translations: '{"test": "translated"}',
         usage: { charsUsed: 100 },
         remainingBalance: 1000,
@@ -212,7 +212,7 @@ suite("Translation Command Tests", () => {
 
       // Mock withProgress to execute the callback immediately
       (vscode.window.withProgress as sinon.SinonStub).callsFake(
-        async (options, callback) => {
+        async (_, callback) => {
           const progress = { report: sinon.stub() };
           const token = { checkCanceled: sinon.stub() };
           return await callback(progress, token);

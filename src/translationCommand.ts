@@ -6,18 +6,18 @@ import * as fs from "fs";
 import * as path from "path";
 
 // Local service imports
-import { I18nProjectManager } from "./i18nProjectManager";
+import { I18nProjectManager, URLS } from "ai-l10n";
 import {
   FileSchema,
   FinishReason,
   L10nTranslationService,
   TranslationRequest,
   TranslationResult,
-} from "./translationService";
+  ILogger,
+} from "ai-l10n";
 import { LanguageSelector } from "./languageSelector";
-import { ILogger } from "./logger";
 
-import { CONFIG, VSCODE_COMMANDS, URLS } from "./constants";
+import { CONFIG, VSCODE_COMMANDS } from "./constants";
 
 /**
  * Asks user how to handle existing target files
@@ -272,7 +272,7 @@ async function performTranslation(
         schema,
       };
 
-      const result = await translationService.translateJson(request, apiKey);
+      const result = await translationService.translate(request, apiKey);
       if (!result) {
         const message = "Translation service returned no result.";
         throw new Error(message);
@@ -411,19 +411,22 @@ async function showSummaryForMultipleTranslations(
   successCount: number,
   failedLanguages: string[]
 ) {
-  if (successCount === totalLanguages) {
-    vscode.window.showInformationMessage(
-      `✅ Successfully translated to all ${totalLanguages} languages!`
-    );
-  } else if (successCount > 0) {
-    vscode.window.showWarningMessage(
-      `Translated to ${successCount}/${totalLanguages} languages. Failed: ${failedLanguages.join(
-        ", "
-      )}`
-    );
-  } else {
-    vscode.window.showErrorMessage(
-      `❌ All translations failed. Please check the logs.`
-    );
-  }
+  // Small delay to ensure progress dialog closes first
+  setTimeout(async () => {
+    if (successCount === totalLanguages) {
+      vscode.window.showInformationMessage(
+        `✅ Successfully translated to all ${totalLanguages} languages!`
+      );
+    } else if (successCount > 0) {
+      vscode.window.showWarningMessage(
+        `Translated to ${successCount}/${totalLanguages} languages. Failed: ${failedLanguages.join(
+          ", "
+        )}`
+      );
+    } else {
+      vscode.window.showErrorMessage(
+        `❌ All translations failed. Please check the logs.`
+      );
+    }
+  }, 500);
 }

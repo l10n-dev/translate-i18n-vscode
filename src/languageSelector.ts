@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { L10nTranslationService } from "./translationService";
+import { L10nTranslationService } from "ai-l10n";
 
 export class LanguageSelector {
   constructor(private readonly translationService: L10nTranslationService) {}

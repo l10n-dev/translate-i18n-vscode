@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { ILogger } from "./logger";
+import { ILogger } from "ai-l10n";
 
 /**
  * Default VS Code output channel logger implementation
