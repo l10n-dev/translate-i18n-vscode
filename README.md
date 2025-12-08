@@ -41,6 +41,20 @@ AI-powered localization in VS Code. Translate i18n JSON and ARB files directly i
 5. Wait for translation to complete
 6. Find your translated files in the appropriate language folders
 
+## Related Project: ai-l10n npm Package
+
+Looking for a programmatic solution? Check out the [**ai-l10n**](https://www.npmjs.com/package/ai-l10n) npm package! This Node.js package provides the same powerful AI translation capabilities directly in your JavaScript/TypeScript projects.
+
+**Why use ai-l10n?**
+
+1. **CI/CD Integration** - Automate translations in your build pipeline or deployment workflows
+2. **Programmatic Control** - Full API access with TypeScript support for custom translation logic and batch processing
+3. **CLI Support** - Command-line interface for quick translations without opening VS Code
+4. **Framework Agnostic** - Use with any Node.js project: React, Vue, Angular, Next.js, Express, or standalone scripts
+5. **Advanced Features** - Access to l10n.dev API
+
+Perfect for developers who want to integrate AI-powered localization into their automated workflows, build tools, or server-side applications.
+
 ### ARB File Support (Flutter Localization)
 
 <img src="images/flutter-localization.gif" alt="Flutter Localization in VS Code">
