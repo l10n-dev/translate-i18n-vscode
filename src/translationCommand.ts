@@ -6,7 +6,7 @@ import * as fs from "fs";
 import * as path from "path";
 
 // Local service imports
-import { I18nProjectManager, URLS } from "ai-l10n";
+import { I18nProjectManager, URLS } from "ai-l10n-sdk";
 import {
   FileSchema,
   FinishReason,
@@ -14,7 +14,7 @@ import {
   TranslationRequest,
   TranslationResult,
   ILogger,
-} from "ai-l10n";
+} from "ai-l10n-sdk";
 import { LanguageSelector } from "./languageSelector";
 
 import { CONFIG, VSCODE_COMMANDS } from "./constants";

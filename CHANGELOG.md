@@ -2,6 +2,29 @@
 
 All notable changes to the "Translate I18n JSON/ARB by l10n.dev" extension will be documented in this file.
 
+## [1.6.1] - 2025-12-16
+
+### Changed
+- 📦 **SDK Integration**: Migrated core functionality to use [ai-l10n-sdk](https://www.npmjs.com/package/ai-l10n-sdk) package for improved maintainability and shared codebase
+- 🔧 **Refactored Architecture**: Extracted translation service, project manager, and shared types into reusable SDK
+- ♻️ **Code Reusability**: Core translation logic now shared between VS Code extension and npm package
+
+### Technical Details
+- Added `ai-l10n-sdk` v1.1.2 as a dependency
+- Refactored imports to use SDK modules:
+  - `L10nTranslationService` from ai-l10n-sdk
+  - `I18nProjectManager` from ai-l10n-sdk
+  - `ILogger` interface from ai-l10n-sdk
+  - `URLS` constants from ai-l10n-sdk
+- Maintains 100% backward compatibility with existing functionality
+- No breaking changes - all features work exactly as before
+
+### Benefits
+- **Better Maintenance**: Bug fixes and improvements in SDK automatically benefit the extension
+- **Consistency**: Same translation logic across VS Code extension and CLI/programmatic usage
+- **Smaller Package**: Reduced code duplication and package size
+- **Future Features**: Easier to add new features that work across all l10n.dev tools
+
 ## [1.6.0] - 2025-12-08
 
 ### Added
