@@ -2,7 +2,7 @@
   "name": "translate-i18n-json",
   "displayName": "Translate I18n JSON/ARB by l10n.dev",
   "description": "Translate i18n JSON and ARB files with AI directly inside VS Code using l10n.dev — smart, context-aware localization powered by AI.",
-  "version": "1.6.0",
+  "version": "1.6.1",
   "publisher": "l10n-dev",
   "license": "AGPL-3.0-only",
   "icon": "images/icon.png",
@@ -165,6 +165,6 @@
     "typescript": "^5.9.2"
   },
   "dependencies": {
-    "ai-l10n": "^1.0.2"
+    "ai-l10n-sdk": "^1.1.2"
   }
 }

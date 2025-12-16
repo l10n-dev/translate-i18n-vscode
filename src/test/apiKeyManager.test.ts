@@ -2,7 +2,7 @@ import * as assert from "assert";
 import * as sinon from "sinon";
 import * as vscode from "vscode";
 import { ApiKeyManager } from "../apiKeyManager";
-import { ILogger } from "ai-l10n";
+import { ILogger } from "ai-l10n-sdk";
 
 suite("ApiKeyManager Configuration Migration Tests", () => {
   let mockContext: any;
@@ -29,6 +29,7 @@ suite("ApiKeyManager Configuration Migration Tests", () => {
     mockLogger = {
       logInfo: sinon.stub(),
       logWarning: sinon.stub(),
+      logError: sinon.stub(),
       showAndLogError: sinon.stub(),
     };
 

@@ -3,7 +3,7 @@ import * as vscode from "vscode";
 
 // Local service imports
 import { ApiKeyManager } from "./apiKeyManager";
-import { I18nProjectManager, L10nTranslationService, URLS } from "ai-l10n";
+import { I18nProjectManager, L10nTranslationService, URLS } from "ai-l10n-sdk";
 import { LanguageSelector } from "./languageSelector";
 import { handleTranslateCommand } from "./translationCommand";
 

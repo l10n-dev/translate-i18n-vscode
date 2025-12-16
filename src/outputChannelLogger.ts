@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { ILogger } from "ai-l10n";
+import { ILogger } from "ai-l10n-sdk";
 
 /**
  * Default VS Code output channel logger implementation
@@ -12,7 +12,7 @@ export class OutputChannelLogger implements ILogger {
   }
 
   showAndLogError(
-    userMessage: string,
+    message: string,
     error?: unknown,
     context?: string,
     linkBtnText?: string,
@@ -21,29 +21,27 @@ export class OutputChannelLogger implements ILogger {
     // Show user-friendly message
     const learnMoreText = linkBtnText || "Learn More";
     const options = url ? [learnMoreText] : [];
-    vscode.window
-      .showErrorMessage(userMessage, ...options)
-      .then((selection) => {
-        if (selection === learnMoreText) {
-          vscode.env.openExternal(vscode.Uri.parse(url!));
-        }
-      });
+    vscode.window.showErrorMessage(message, ...options).then((selection) => {
+      if (selection === learnMoreText) {
+        vscode.env.openExternal(vscode.Uri.parse(url!));
+      }
+    });
 
     // Log detailed error information
     const timestamp = new Date().toISOString();
-    const stackTrace = error instanceof Error ? error.stack : "";
+    this.outputChannel.appendLine(`[${timestamp}] ERROR: ${message}`);
 
-    this.outputChannel.appendLine(`[${timestamp}] ERROR: ${userMessage}`);
     if (context) {
       this.outputChannel.appendLine(`Context: ${context}`);
     }
-    if (stackTrace) {
-      this.outputChannel.appendLine(`Stack trace: ${stackTrace}`);
+
+    if (error instanceof Error) {
+      this.outputChannel.appendLine(`Stack trace: ${error.stack}`);
     }
     this.outputChannel.appendLine("---");
 
     // Also log to console for development
-    console.error(`[Translate i18n JSON/ARB] ${userMessage}:`, error);
+    console.error(`[Translate i18n JSON/ARB] ${message}:`, error);
   }
 
   logInfo(message: string): void {
@@ -51,8 +49,29 @@ export class OutputChannelLogger implements ILogger {
     this.outputChannel.appendLine(`[${timestamp}] INFO: ${message}`);
   }
 
-  logWarning(message: string): void {
+  logWarning(message: string, error?: unknown): void {
     const timestamp = new Date().toISOString();
     this.outputChannel.appendLine(`[${timestamp}] WARNING: ${message}`);
+
+    if (error instanceof Error) {
+      this.outputChannel.appendLine(`Stack trace: ${error.stack}`);
+    }
+    this.outputChannel.appendLine("---");
+
+    // Also log to console for development
+    console.warn(`[Translate i18n JSON/ARB] ${message}:`, error);
+  }
+
+  logError(message: string, error?: unknown): void {
+    const timestamp = new Date().toISOString();
+    this.outputChannel.appendLine(`[${timestamp}] ERROR: ${message}`);
+
+    if (error instanceof Error) {
+      this.outputChannel.appendLine(`Stack trace: ${error.stack}`);
+    }
+    this.outputChannel.appendLine("---");
+
+    // Also log to console for development
+    console.error(`[Translate i18n JSON/ARB] ${message}:`, error);
   }
 }

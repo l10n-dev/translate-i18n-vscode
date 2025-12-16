@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import { CONFIG } from "./constants";
-import { ILogger, URLS } from "ai-l10n";
+import { ILogger, URLS } from "ai-l10n-sdk";
 
 export class ApiKeyManager {
   private readonly SECRET_KEY = `${CONFIG.SECTION}.${CONFIG.KEYS.API_KEY}`;
