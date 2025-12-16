@@ -14,11 +14,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/AntonovAnton/translate-i18n-vscode.git"
+    "url": "https://github.com/l10n-dev/translate-i18n-vscode.git"
   },
   "homepage": "https://l10n.dev",
   "bugs": {
-    "url": "https://github.com/AntonovAnton/translate-i18n-vscode/issues"
+    "url": "https://github.com/l10n-dev/translate-i18n-vscode/issues"
   },
   "keywords": [
     "translation",
