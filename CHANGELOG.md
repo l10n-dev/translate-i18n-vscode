@@ -2,6 +2,31 @@
 
 All notable changes to the "Translate I18n JSON/ARB by l10n.dev" extension will be documented in this file.
 
+## [1.7.0] - 2026-02-04
+
+### Added
+- 📝 **JSONC Support**: Full support for JSON with Comments (JSONC) files. Translate configuration files with comments.
+  - Accepts both `.json` and `.jsonc` file extensions
+  - JSONC files are parsed to JSON for translation (comments are removed to enable proper string detection)
+  - Available in both editor and explorer context menus
+- 🛍️ **Shopify Theme File-Based Structure**: Built-in support for Shopify theme localization files with automatic `.default.` prefix handling
+  - Files with `.default.` in the name (e.g., `en.default.schema.json`) are recognized as source files
+  - Target files automatically remove `.default.` while preserving `.schema.` suffix
+  - Example: `en.default.schema.json` → `es-ES.schema.json`, `fr.schema.json`
+
+### Changed
+- 📦 **SDK Update**: Upgraded to [ai-l10n-sdk](https://www.npmjs.com/package/ai-l10n-sdk) v1.2.0 for JSONC and Shopify theme support
+- 🎯 **JSONC Activation**: Extension now activates for both JSON and JSONC language modes
+- 💬 **Context Menus**: Translation commands now appear for JSONC files in both editor and explorer context menus
+- 🔧 **File Extension Handling**: Updated file validation to accept `.json`, `.jsonc`, and `.arb` extensions
+
+### Technical Details
+- Added `onLanguage:jsonc` activation event
+- Updated editor context menu to support `editorLangId == jsonc`
+- Updated explorer context menu to support `resourceExtname == .jsonc`
+- JSONC files are now recognized and can be translated just like JSON files
+- Extended test suite with comprehensive JSONC test coverage
+
 ## [1.6.1] - 2025-12-16
 
 ### Changed

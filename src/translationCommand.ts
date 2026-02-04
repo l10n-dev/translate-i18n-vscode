@@ -77,11 +77,12 @@ export async function handleTranslateCommand(
     // Get the file to translate
     let fileUri = uri || vscode.window.activeTextEditor?.document.uri;
 
-    const expectedExtension = isArbFile ? ".arb" : ".json";
-    const fileType = isArbFile ? "ARB" : "JSON";
+    const expectedExtensions = isArbFile ? [".arb"] : [".json", ".jsonc"];
+    const fileType = isArbFile ? "ARB" : "JSON/JSONC";
 
     // If no valid file is available, prompt user to search and open one
-    if (!fileUri || !fileUri.fsPath.endsWith(expectedExtension)) {
+    const hasValidExtension = fileUri && expectedExtensions.some(ext => fileUri.fsPath.endsWith(ext));
+    if (!fileUri || !hasValidExtension) {
       logger.logInfo(`No selected ${fileType} file, opening Quick Open panel`);
 
       // Use VS Code's Quick Open panel (Ctrl+P equivalent)

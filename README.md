@@ -8,7 +8,9 @@ AI-powered localization in VS Code. Translate i18n JSON and ARB files directly i
 
 - 🤖 **AI-Powered Translation**: Context-aware translations using advanced AI.
 - **165 Languages**: Translate to any of 165 supported languages.
+- 📝 **JSONC Support**: Support for JSON with Comments (JSONC) files. Comments are stripped during processing to ensure accurate translation and missing string detection.
 - **Flutter Localization Support**: Full support for ARB (Application Resource Bundle) files used in Flutter apps. Automatically handles `@@locale` and `@@last_modified` metadata.
+- 🛍️ **Shopify Theme Support**: Built-in support for Shopify theme localization files with automatic `.default.` prefix handling and `.schema.json` preservation.
 - 🔧 **Customizable Translation Style**: Configure translations to use contractions (e.g., "don't" vs "do not"), enable shortening when translations exceed source text length, and generate plural forms for i18next compatibility.
 - 🔄 **Translate Only New Strings**: When a target file already exists, choose to translate only new strings and update the existing file, or create a new file with a copy number. Perfect for iterative localization workflows.
 - 🌐 **i18next Plural Forms Support**: Automatically generates all required plural form strings with correct plural suffixes when enabled—ideal for i18next projects. For languages with complex pluralization rules (like Russian, Arabic, or Polish), the extension ensures every necessary form is created, even if your source file only has `_one` or `_other`. This guarantees your app works correctly in every locale, with no missing or incorrect plural forms.
@@ -34,7 +36,7 @@ AI-powered localization in VS Code. Translate i18n JSON and ARB files directly i
 2. Run `l10n.dev: Set API Key`
 3. Paste your API Key when prompted
 ### 3. Translate Your Files
-1. Right-click on any JSON or ARB file in the Explorer or Editor
+1. Right-click on any JSON, JSONC, or ARB file in the Explorer or Editor
 2. Select `Translate JSON to...` or `Translate ARB to...`
 3. Choose your target language (or select **"Translate to All Languages"** for batch translation)
 4. If target file(s) exist, choose to update existing files or create new ones
@@ -111,6 +113,20 @@ l10n/
 - **File Saving**: Saves the translated file using the target language code as the filename in the same folder
 - **Example**: Translating `i18n/en.json` to Spanish → `i18n/es.json`
 - **Conflict Resolution**: If the target file already exists, adds a copy number (e.g., `es (1).json`)
+
+### Shopify Theme File-Based Structure
+```
+theme/locales/
+├── en.default.schema.json  # Source file
+├── es-ES.schema.json       # Auto-detected
+├── fr.schema.json          # Auto-detected
+└── de.schema.json          # Auto-detected
+```
+**How it works:**
+- **Detection**: Files with `.default.` in the name (e.g., `en.default.schema.json`) are recognized as source files
+- **File Saving**: Target files automatically remove `.default.` while preserving `.schema.` suffix
+- **Example**: Translating `theme/locales/en.default.schema.json` to Spanish → `theme/locales/es-ES.schema.json`
+- **Conflict Resolution**: If the target file already exists, adds a copy number (e.g., `es-ES (1).schema.json`)
 
 ### Unknown Structure Fallback
 For projects that don't match the above patterns, the extension falls back to saving files with the format: `{originalname}.{languagecode}.json` in the same directory as the source file.

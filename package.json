@@ -2,7 +2,7 @@
   "name": "translate-i18n-json",
   "displayName": "Translate I18n JSON/ARB by l10n.dev",
   "description": "Translate i18n JSON and ARB files with AI directly inside VS Code using l10n.dev — smart, context-aware localization powered by AI.",
-  "version": "1.6.1",
+  "version": "1.7.0",
   "publisher": "l10n-dev",
   "license": "AGPL-3.0-only",
   "icon": "images/icon.png",
@@ -33,7 +33,9 @@
     "multilingual",
     "arb",
     "flutter",
-    "intl"
+    "intl",
+    "jsonc",
+    "shopify"
   ],
   "engines": {
     "vscode": "^1.102.0"
@@ -44,7 +46,8 @@
     "Other"
   ],
   "activationEvents": [
-    "onLanguage:json"
+    "onLanguage:json",
+    "onLanguage:jsonc"
   ],
   "main": "./dist/extension.js",
   "contributes": {
@@ -79,7 +82,7 @@
       "explorer/context": [
         {
           "command": "l10n.translate-i18n.translate",
-          "when": "resourceExtname == .json",
+          "when": "resourceExtname == .json || resourceExtname == .jsonc",
           "group": "navigation"
         },
         {
@@ -91,7 +94,7 @@
       "editor/context": [
         {
           "command": "l10n.translate-i18n.translate",
-          "when": "editorLangId == json",
+          "when": "editorLangId == json || editorLangId == jsonc",
           "group": "navigation"
         },
         {
@@ -165,6 +168,6 @@
     "typescript": "^5.9.2"
   },
   "dependencies": {
-    "ai-l10n-sdk": "^1.1.2"
+    "ai-l10n-sdk": "^1.2.0"
   }
 }
