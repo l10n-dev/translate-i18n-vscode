@@ -71,7 +71,7 @@ suite("Translation Command Tests", () => {
     );
     assert.ok(
       (vscode.window.showInformationMessage as sinon.SinonStub).calledWith(
-        "Search for and open a JSON file, then run the translate command again."
+        "Search for and open a JSON/JSONC file, then run the translate command again."
       )
     );
   });
@@ -238,6 +238,139 @@ suite("Translation Command Tests", () => {
       // Assert - normalizeLanguageCode is called without isArbFile parameter
       assert.ok(
         mockI18nProjectManager.normalizeLanguageCode.calledWith("es_ES")
+      );
+    });
+  });
+
+  suite("JSONC File Handling", () => {
+    test("handleTranslateCommand accepts .jsonc files", async () => {
+      // Arrange
+      const mockApiKey = "test-api-key";
+      const mockUri = { fsPath: "/test/config.jsonc" } as vscode.Uri;
+      
+      mockI18nProjectManager.detectLanguagesFromProject.returns(["es", "fr"]);
+      mockLanguageSelector.selectTargetLanguage.resolves(null); // User cancels
+      
+      // Act
+      await handleTranslateCommand(
+        mockUri,
+        mockLogger,
+        mockApiKey,
+        mockTranslationService,
+        mockI18nProjectManager,
+        mockLanguageSelector
+      );
+
+      // Assert - should not show quick open for .jsonc files
+      assert.ok(
+        !(vscode.commands.executeCommand as sinon.SinonStub).calledWith(
+          VSCODE_COMMANDS.QUICK_OPEN
+        )
+      );
+      assert.ok(mockI18nProjectManager.detectLanguagesFromProject.called);
+    });
+
+    test("handleTranslateCommand processes JSONC files with comments", async () => {
+      // Arrange
+      const mockApiKey = "test-api-key";
+      mockI18nProjectManager.detectLanguagesFromProject.returns(["es"]);
+      mockLanguageSelector.selectTargetLanguage.resolves("es");
+      mockI18nProjectManager.validateLanguageCode.withArgs("es").returns(true);
+      mockI18nProjectManager.normalizeLanguageCode.withArgs("es").returns("es");
+      mockI18nProjectManager.generateTargetFilePath.returns(
+        "/test/path/config_es.jsonc"
+      );
+      mockI18nProjectManager.getUniqueFilePath = sinon
+        .stub()
+        .returns("/test/path/config_es.jsonc");
+
+      // Mock file system with JSONC content (includes comments)
+      const fs = require("fs");
+      const jsoncContent = `{
+  // This is a comment
+  "greeting": "Hello",
+  /* Multi-line
+     comment */
+  "farewell": "Goodbye"
+}`;
+      sinon.stub(fs, "readFileSync").returns(jsoncContent);
+      sinon.stub(fs, "existsSync").returns(false);
+      const writeFileStub = sinon.stub(fs, "writeFileSync");
+
+      mockTranslationService.translate.resolves({
+        translations: '{"greeting": "Hola", "farewell": "Adiós"}',
+        usage: { charsUsed: 50 },
+        remainingBalance: 2000,
+      });
+
+      // Mock workspace configuration
+      const mockConfig = {
+        get: sinon.stub().returns(false),
+      };
+      sinon
+        .stub(vscode.workspace, "getConfiguration")
+        .returns(mockConfig as any);
+
+      // Mock withProgress to execute the callback immediately
+      (vscode.window.withProgress as sinon.SinonStub).callsFake(
+        async (_, callback) => {
+          const progress = { report: sinon.stub() };
+          const token = { checkCanceled: sinon.stub() };
+          return await callback(progress, token);
+        }
+      );
+
+      const mockUri = {
+        fsPath: "/test/path/config.jsonc",
+      };
+
+      // Act
+      await handleTranslateCommand(
+        mockUri as any,
+        mockLogger,
+        mockApiKey,
+        mockTranslationService,
+        mockI18nProjectManager,
+        mockLanguageSelector,
+        false // isArbFile
+      );
+
+      // Assert - verify file was written
+      assert.ok(writeFileStub.called);
+      assert.ok(
+        writeFileStub.calledWith(
+          "/test/path/config_es.jsonc",
+          sinon.match.string
+        )
+      );
+    });
+
+    test("handleTranslateCommand shows appropriate message for JSONC when no file selected", async () => {
+      // Arrange
+      const mockApiKey = "test-api-key";
+      const mockUri = undefined;
+
+      // Act
+      await handleTranslateCommand(
+        mockUri as any,
+        mockLogger,
+        mockApiKey,
+        mockTranslationService,
+        mockI18nProjectManager,
+        mockLanguageSelector,
+        false // Not ARB file
+      );
+
+      // Assert
+      assert.ok(
+        (vscode.commands.executeCommand as sinon.SinonStub).calledWith(
+          VSCODE_COMMANDS.QUICK_OPEN
+        )
+      );
+      assert.ok(
+        (vscode.window.showInformationMessage as sinon.SinonStub).calledWith(
+          "Search for and open a JSON/JSONC file, then run the translate command again."
+        )
       );
     });
   });
