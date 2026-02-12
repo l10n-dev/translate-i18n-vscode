@@ -6,11 +6,9 @@ AI-powered localization in VS Code. Translate i18n JSON and ARB files directly i
 
 ## Features
 
-- 🤖 **AI-Powered Translation**: Context-aware translations using advanced AI.
-- **165 Languages**: Translate to any of 165 supported languages.
-- 📝 **JSONC Support**: Support for JSON with Comments (JSONC) files. Comments are stripped during processing to ensure accurate translation and missing string detection.
-- **Flutter Localization Support**: Full support for ARB (Application Resource Bundle) files used in Flutter apps. Automatically handles `@@locale` and `@@last_modified` metadata.
-- 🛍️ **Shopify Theme Support**: Built-in support for Shopify theme localization files with automatic `.default.` prefix handling and `.schema.json` preservation.
+- 🤖 **AI-Powered Translation**: Context-aware translations using advanced AI. Translate to 165+ languages.
+- **Flutter Localization Support**: Full support for ARB (Application Resource Bundle) files used in Flutter apps. Metadata translation control.
+- 🛍️ **Shopify Theme Support**: Built-in support for Shopify theme localization files.
 - 🔧 **Customizable Translation Style**: Configure translations to use contractions (e.g., "don't" vs "do not"), enable shortening when translations exceed source text length, and generate plural forms for i18next compatibility.
 - 🔄 **Translate Only New Strings**: When a target file already exists, choose to translate only new strings and update the existing file, or create a new file with a copy number. Perfect for iterative localization workflows.
 - 🌐 **i18next Plural Forms Support**: Automatically generates all required plural form strings with correct plural suffixes when enabled—ideal for i18next projects. For languages with complex pluralization rules (like Russian, Arabic, or Polish), the extension ensures every necessary form is created, even if your source file only has `_one` or `_other`. This guarantees your app works correctly in every locale, with no missing or incorrect plural forms.
@@ -21,6 +19,7 @@ AI-powered localization in VS Code. Translate i18n JSON and ARB files directly i
 - 🌍 **Translate to All Languages**: Translate your file to all detected languages at once with a single command.
 - 🌐 **i18next Support**: Works seamlessly with i18next and other common i18n formats.
 - 🧩 **Source Text as Keys**: Supports projects using source text as translation keys.
+- 📝 **JSONC Support**: Support for JSON with Comments (JSONC) files. Comments are stripped during processing to ensure accurate translation and missing string detection.
 - 🕵️ **Smart Error Detection & Chunking**: Automatically detects and retries translations if placeholders or formatting are lost by the AI. For large files, l10n.dev splits content into manageable chunks, maintaining links and context between segments. This prevents issues common with direct uploads to AI models (like Claude or GPT), where exceeding ~16,000 characters can cause the model to omit, merge, or shorten content—resulting in lost context and lower translation quality. l10n.dev's approach ensures high-quality, accurate translations even for large i18n files.
 - 💰 **Free**: Users get 30,000 characters free monthly.
 
@@ -37,7 +36,7 @@ AI-powered localization in VS Code. Translate i18n JSON and ARB files directly i
 3. Paste your API Key when prompted
 ### 3. Translate Your Files
 1. Right-click on any JSON, JSONC, or ARB file in the Explorer or Editor
-2. Select `Translate JSON to...` or `Translate ARB to...`
+2. Select `Translate JSON/ARB to...`
 3. Choose your target language (or select **"Translate to All Languages"** for batch translation)
 4. If target file(s) exist, choose to update existing files or create new ones
 5. Wait for translation to complete
@@ -139,15 +138,14 @@ Configure translation behavior in VS Code settings (`Ctrl+,` and search for "l10
 - **Use Contractions**: Makes translations less formal (default: true)
 - **Use Shortening**: Uses shortened forms if translation is longer than source (default: false)
 - **Generate Plural Forms**: Generates additional plural form strings (e.g., for i18next) with plural suffixes. Do not enable for strict source-to-target mapping (default: false)
-- **Translate Metadata**: Translate metadata along with UI strings. For example, in Flutter ARB files, metadata entries like @key contain descriptions that can also be translated. Enable to translate metadata (default: false)
+- **Translate Metadata**: Translate metadata along with UI strings. For example, in Flutter ARB files, metadata entries like `@key` contain descriptions that can also be translated. Enable to translate metadata (default: false)
 
 ## Commands
 
 - `Translate I18n: Set API Key` - Securely configure API Key
 - `Translate I18n: Clear API Key` - Clear API Key in VS Code secrets storage
 - `Translate I18n: Configure Translation Options` - Open extension settings
-- `Translate I18n: Translate JSON to...` - Translate JSON file
-- `Translate I18n: Translate ARB to...` - Translate ARB file (Flutter localization)
+- `Translate I18n: Translate JSON/ARB to...` - Translate JSON file or ARB file (Flutter localization)
 
 ## Language Support
 
