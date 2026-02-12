@@ -32,7 +32,7 @@ export function activate(context: vscode.ExtensionContext) {
     logger,
     translationService,
     i18nProjectManager,
-    languageSelector
+    languageSelector,
   );
 }
 
@@ -43,7 +43,7 @@ function setupWelcomeMessage(context: vscode.ExtensionContext) {
   // Show welcome message for new users
   const hasShownWelcome = context.globalState.get(
     STATE_KEYS.WELCOME_SHOWN,
-    false
+    false,
   );
   if (!hasShownWelcome) {
     const freeBalance = (30000).toLocaleString();
@@ -70,14 +70,14 @@ function registerCommands(
   logger: OutputChannelLogger,
   translationService: L10nTranslationService,
   i18nProjectManager: I18nProjectManager,
-  languageSelector: LanguageSelector
+  languageSelector: LanguageSelector,
 ) {
   // Register set API Key command
   const setApiKeyDisposable = vscode.commands.registerCommand(
     COMMANDS.SET_API_KEY,
     async () => {
       await apiKeyManager.setApiKey();
-    }
+    },
   );
 
   // Register clear API Key command
@@ -87,13 +87,13 @@ function registerCommands(
       const action = await vscode.window.showWarningMessage(
         "Are you sure you want to clear your API Key? You'll need to set it again to use translation features.",
         "Clear API Key",
-        "Cancel"
+        "Cancel",
       );
 
       if (action === "Clear API Key") {
         await apiKeyManager.clearApiKey();
       }
-    }
+    },
   );
 
   // Register configure options command
@@ -102,9 +102,9 @@ function registerCommands(
     async () => {
       await vscode.commands.executeCommand(
         VSCODE_COMMANDS.OPEN_SETTINGS,
-        CONFIG.SECTION
+        CONFIG.SECTION,
       );
-    }
+    },
   );
 
   // Register translate command
@@ -123,30 +123,8 @@ function registerCommands(
         translationService,
         i18nProjectManager,
         languageSelector,
-        false // isArbFile
       );
-    }
-  );
-
-  // Register translate ARB command
-  const translateArbDisposable = vscode.commands.registerCommand(
-    COMMANDS.TRANSLATE_ARB,
-    async (uri: vscode.Uri) => {
-      // Ensure we have an API Key (will prompt user if needed)
-      const apiKey = await apiKeyManager.ensureApiKey();
-      if (!apiKey) {
-        return; // User cancelled API Key setup
-      }
-      await handleTranslateCommand(
-        uri,
-        logger,
-        apiKey,
-        translationService,
-        i18nProjectManager,
-        languageSelector,
-        true // isArbFile
-      );
-    }
+    },
   );
 
   context.subscriptions.push(
@@ -154,7 +132,6 @@ function registerCommands(
     clearApiKeyDisposable,
     configureOptionsDisposable,
     translateDisposable,
-    translateArbDisposable
   );
 }
 

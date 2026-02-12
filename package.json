@@ -2,7 +2,7 @@
   "name": "translate-i18n-json",
   "displayName": "Translate I18n JSON/ARB by l10n.dev",
   "description": "Translate i18n JSON and ARB files with AI directly inside VS Code using l10n.dev — smart, context-aware localization powered by AI.",
-  "version": "1.7.0",
+  "version": "1.8.0",
   "publisher": "l10n-dev",
   "license": "AGPL-3.0-only",
   "icon": "images/icon.png",
@@ -47,19 +47,15 @@
   ],
   "activationEvents": [
     "onLanguage:json",
-    "onLanguage:jsonc"
+    "onLanguage:jsonc",
+    "onLanguage:arb"
   ],
   "main": "./dist/extension.js",
   "contributes": {
     "commands": [
       {
         "command": "l10n.translate-i18n.translate",
-        "title": "Translate JSON to...",
-        "category": "Translate I18n"
-      },
-      {
-        "command": "l10n.translate-i18n.translateArb",
-        "title": "Translate ARB to...",
+        "title": "Translate JSON/ARB to...",
         "category": "Translate I18n"
       },
       {
@@ -82,24 +78,14 @@
       "explorer/context": [
         {
           "command": "l10n.translate-i18n.translate",
-          "when": "resourceExtname == .json || resourceExtname == .jsonc",
-          "group": "navigation"
-        },
-        {
-          "command": "l10n.translate-i18n.translateArb",
-          "when": "resourceExtname == .arb",
+          "when": "resourceExtname == .json || resourceExtname == .jsonc || resourceExtname == .arb",
           "group": "navigation"
         }
       ],
       "editor/context": [
         {
           "command": "l10n.translate-i18n.translate",
-          "when": "editorLangId == json || editorLangId == jsonc",
-          "group": "navigation"
-        },
-        {
-          "command": "l10n.translate-i18n.translateArb",
-          "when": "resourceExtname == .arb",
+          "when": "editorLangId == json || editorLangId == jsonc || editorLangId == arb",
           "group": "navigation"
         }
       ]
@@ -133,6 +119,11 @@
           "type": "boolean",
           "default": true,
           "description": "Save filtered strings (content policy violations or length limit) to a separate .filtered.json/.filtered.arb file. If disabled, filtered strings are only logged."
+        },
+        "l10n-translate-i18n.translateMetadata": {
+          "type": "boolean",
+          "default": false,
+          "description": "Translate metadata along with UI strings. For example, in Flutter ARB files, metadata entries like @key contain descriptions that can also be translated. Enable to translate metadata in target files."
         }
       }
     }
@@ -168,6 +159,6 @@
     "typescript": "^5.9.2"
   },
   "dependencies": {
-    "ai-l10n-sdk": "^1.2.0"
+    "ai-l10n-sdk": "^1.3.0"
   }
 }
