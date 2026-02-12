@@ -64,6 +64,7 @@ Perfect for developers who want to integrate AI-powered localization into their 
 The extension fully supports ARB (Application Resource Bundle) files used in Flutter applications:
 
 - **Automatic Metadata Updates**: The API automatically updates `@@locale` to the target language code and `@@last_modified` to the current UTC timestamp
+- **Metadata Translation Control**: By default, metadata entries (like `@key`) are NOT translated and remain unchanged. Enable the `translateMetadata` setting if you want to translate these metadata (e.g. description, example, context for translators) along with UI strings
 - **Custom Prefixes**: Supports custom file naming patterns (e.g., `app_en_US.arb`, `my_app_fr.arb`)
 - **Underscore Format**: ARB files use underscores instead of hyphens (e.g., `en_US` instead of `en-US`)
 - **Perfect for Flutter**: Seamlessly integrates with Flutter's localization workflow
@@ -138,6 +139,7 @@ Configure translation behavior in VS Code settings (`Ctrl+,` and search for "l10
 - **Use Contractions**: Makes translations less formal (default: true)
 - **Use Shortening**: Uses shortened forms if translation is longer than source (default: false)
 - **Generate Plural Forms**: Generates additional plural form strings (e.g., for i18next) with plural suffixes. Do not enable for strict source-to-target mapping (default: false)
+- **Translate Metadata**: Translate metadata along with UI strings. For example, in Flutter ARB files, metadata entries like @key contain descriptions that can also be translated. Enable to translate metadata (default: false)
 
 ## Commands
 

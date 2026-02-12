@@ -25,7 +25,7 @@ import { CONFIG, VSCODE_COMMANDS } from "./constants";
  */
 async function askTranslateOnlyNewStringsPreference(
   existingFileCount: number,
-  fileName?: string
+  fileName?: string,
 ): Promise<"update" | "create" | undefined> {
   const isMultipleFiles = existingFileCount > 1;
   const placeHolder = isMultipleFiles
@@ -54,7 +54,7 @@ async function askTranslateOnlyNewStringsPreference(
     {
       placeHolder,
       ignoreFocusOut: true,
-    }
+    },
   );
 
   return choice?.value;
@@ -71,17 +71,17 @@ export async function handleTranslateCommand(
   translationService: L10nTranslationService,
   i18nProjectManager: I18nProjectManager,
   languageSelector: LanguageSelector,
-  isArbFile: boolean = false
 ) {
   try {
     // Get the file to translate
     let fileUri = uri || vscode.window.activeTextEditor?.document.uri;
 
-    const expectedExtensions = isArbFile ? [".arb"] : [".json", ".jsonc"];
-    const fileType = isArbFile ? "ARB" : "JSON/JSONC";
+    const expectedExtensions = [".json", ".jsonc", ".arb"];
+    const fileType = "JSON/JSONC or ARB";
 
     // If no valid file is available, prompt user to search and open one
-    const hasValidExtension = fileUri && expectedExtensions.some(ext => fileUri.fsPath.endsWith(ext));
+    const hasValidExtension =
+      fileUri && expectedExtensions.some((ext) => fileUri.fsPath.endsWith(ext));
     if (!fileUri || !hasValidExtension) {
       logger.logInfo(`No selected ${fileType} file, opening Quick Open panel`);
 
@@ -93,7 +93,7 @@ export async function handleTranslateCommand(
       // Show a message to guide the user
       vscode.window.showInformationMessage(
         `Search for and open a ${fileType} file, then run the translate command again.`,
-        { modal: false }
+        { modal: false },
       );
 
       return;
@@ -101,13 +101,15 @@ export async function handleTranslateCommand(
 
     // Detect available languages from project structure
     const detectedLanguages = i18nProjectManager.detectLanguagesFromProject(
-      fileUri.fsPath
+      fileUri.fsPath,
     );
+
+    const isArbFile = fileUri.fsPath.endsWith(".arb");
 
     // Let user choose target language(s)
     const targetLanguageSelection = await languageSelector.selectTargetLanguage(
       detectedLanguages,
-      isArbFile
+      isArbFile,
     );
 
     if (!targetLanguageSelection) {
@@ -132,16 +134,16 @@ export async function handleTranslateCommand(
     // Ask user once about translate only new strings preference (if multiple files might exist)
     let translateOnlyNewStrings = false;
     const targetFilePaths = targetLanguages.map((lang) =>
-      i18nProjectManager.generateTargetFilePath(fileUri.fsPath, lang)
+      i18nProjectManager.generateTargetFilePath(fileUri.fsPath, lang),
     );
     const existingFiles = targetFilePaths.filter((targetFilePath) =>
-      fs.existsSync(targetFilePath)
+      fs.existsSync(targetFilePath),
     );
 
     if (existingFiles.length > 0) {
       const choice = await askTranslateOnlyNewStringsPreference(
         existingFiles.length,
-        path.basename(existingFiles[0])
+        path.basename(existingFiles[0]),
       );
 
       if (!choice) {
@@ -152,7 +154,7 @@ export async function handleTranslateCommand(
       logger.logInfo(
         `User chose to ${
           choice === "update" ? "update existing files" : "create new files"
-        } for ${targetLanguages.length} target language(s)`
+        } for ${targetLanguages.length} target language(s)`,
       );
     }
 
@@ -165,7 +167,7 @@ export async function handleTranslateCommand(
 
         try {
           logger.logInfo(
-            `Translating (${i + 1}/${totalLanguages}) to ${targetLanguage}`
+            `Translating (${i + 1}/${totalLanguages}) to ${targetLanguage}`,
           );
 
           await performTranslation(
@@ -177,7 +179,7 @@ export async function handleTranslateCommand(
             i18nProjectManager,
             apiKey,
             translateOnlyNewStrings,
-            isArbFile ? FileSchema.ARBFlutter : null
+            isArbFile ? FileSchema.ARBFlutter : null,
           );
 
           return { success: true, language: targetLanguage };
@@ -187,11 +189,11 @@ export async function handleTranslateCommand(
               error instanceof Error ? error.message : "Unknown error"
             }`,
             error,
-            `File: ${fileUri.fsPath}, Target: ${targetLanguage}`
+            `File: ${fileUri.fsPath}, Target: ${targetLanguage}`,
           );
           return { success: false, language: targetLanguage };
         }
-      }
+      },
     );
 
     // Wait for all translations to complete
@@ -206,14 +208,14 @@ export async function handleTranslateCommand(
       showSummaryForMultipleTranslations(
         totalLanguages,
         successCount,
-        failedLanguages
+        failedLanguages,
       );
     }
   } catch (error) {
     logger.showAndLogError(
       `Error: ${error instanceof Error ? error.message : "Unknown error"}`,
       error,
-      "Translation command execution"
+      "Translation command execution",
     );
   }
 }
@@ -231,7 +233,7 @@ async function performTranslation(
   i18nProjectManager: I18nProjectManager,
   apiKey: string,
   translateOnlyNewStrings: boolean,
-  schema: FileSchema | null
+  schema: FileSchema | null,
 ) {
   let targetStrings: string | undefined = undefined;
   if (translateOnlyNewStrings && fs.existsSync(targetFilePath)) {
@@ -242,7 +244,7 @@ async function performTranslation(
     {
       location: vscode.ProgressLocation.Notification,
       title: `Translating ${path.basename(
-        sourceFilePath
+        sourceFilePath,
       )} to ${targetLanguage} `,
       cancellable: false,
     },
@@ -264,8 +266,9 @@ async function performTranslation(
         useShortening: config.get(CONFIG.KEYS.USE_SHORTENING, false),
         generatePluralForms: config.get(
           CONFIG.KEYS.GENERATE_PLURAL_FORMS,
-          false
+          false,
         ),
+        translateMetadata: config.get(CONFIG.KEYS.TRANSLATE_METADATA, false),
         client: CONFIG.CLIENT,
         returnTranslationsAsString: true,
         translateOnlyNewStrings,
@@ -309,14 +312,14 @@ async function performTranslation(
 
       // Show success message with usage info after progress completes
       await showTranslationSuccess(logger, result, outputPath);
-    }
+    },
   );
 }
 
 async function handleFilteredStrings(
   logger: ILogger,
   result: TranslationResult,
-  targetFilePath: string
+  targetFilePath: string,
 ) {
   let reasonMessage: string;
   if (result.finishReason === FinishReason.contentFilter) {
@@ -330,7 +333,7 @@ async function handleFilteredStrings(
   const config = vscode.workspace.getConfiguration(CONFIG.SECTION);
   const saveFilteredStrings = config.get(
     CONFIG.KEYS.SAVE_FILTERED_STRINGS,
-    true
+    true,
   );
   const filteredStringsJson = JSON.stringify(result.filteredStrings, null, 2);
   let warningMessage = `${result.filteredStringsCount} string(s) were excluded due to ${reasonMessage}.`;
@@ -347,7 +350,7 @@ async function handleFilteredStrings(
     logger.logWarning(warningMessage);
   } else {
     logger.logInfo(
-      `${warningMessage} Filtered strings:\n${filteredStringsJson}`
+      `${warningMessage} Filtered strings:\n${filteredStringsJson}`,
     );
     warningMessage += ` Filtered strings are logged.`;
   }
@@ -381,14 +384,14 @@ async function showInformationMessage(logger: ILogger, message: string) {
 async function showTranslationSuccess(
   logger: ILogger,
   result: TranslationResult,
-  targetFilePath: string
+  targetFilePath: string,
 ) {
   const charsUsed = result.usage.charsUsed || 0;
   const remainingBalance = result.remainingBalance || 0;
   let message = `✅ Translation completed! Used ${charsUsed.toLocaleString()} characters.`;
   if (charsUsed > 0) {
     message += ` Remaining: ${remainingBalance.toLocaleString()} characters. File saved as ${path.basename(
-      targetFilePath
+      targetFilePath,
     )}`;
   }
   logger.logInfo(message);
@@ -397,7 +400,7 @@ async function showTranslationSuccess(
   setTimeout(async () => {
     const action = await vscode.window.showInformationMessage(
       message,
-      "Open File"
+      "Open File",
     );
 
     if (action === "Open File") {
@@ -410,23 +413,23 @@ async function showTranslationSuccess(
 async function showSummaryForMultipleTranslations(
   totalLanguages: number,
   successCount: number,
-  failedLanguages: string[]
+  failedLanguages: string[],
 ) {
   // Small delay to ensure progress dialog closes first
   setTimeout(async () => {
     if (successCount === totalLanguages) {
       vscode.window.showInformationMessage(
-        `✅ Successfully translated to all ${totalLanguages} languages!`
+        `✅ Successfully translated to all ${totalLanguages} languages!`,
       );
     } else if (successCount > 0) {
       vscode.window.showWarningMessage(
         `Translated to ${successCount}/${totalLanguages} languages. Failed: ${failedLanguages.join(
-          ", "
-        )}`
+          ", ",
+        )}`,
       );
     } else {
       vscode.window.showErrorMessage(
-        `❌ All translations failed. Please check the logs.`
+        `❌ All translations failed. Please check the logs.`,
       );
     }
   }, 500);

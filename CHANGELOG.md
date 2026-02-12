@@ -2,6 +2,32 @@
 
 All notable changes to the "Translate I18n JSON/ARB by l10n.dev" extension will be documented in this file.
 
+## [1.8.0] - 2026-02-12
+
+### Added
+- ⚙️ **Translate Metadata Configuration**: New `translateMetadata` setting to control whether metadata is translated along with UI strings
+  - Disabled by default to keep metadata unchanched in the source language
+  - Enable this setting if you want metadata entries (like `@key` descriptions) to be translated along with UI strings
+  - Useful for maintaining consistent language in metadata across all locales when needed
+- 🎯 **ARB Language Activation**: Added `onLanguage:arb` activation event for better ARB file context recognition
+
+### Changed
+- 📦 **SDK Update**: Upgraded to [ai-l10n-sdk](https://www.npmjs.com/package/ai-l10n-sdk) v1.3.0 for metadata translation control
+- 🔄 **Unified Translation Command**: Merged `Translate JSON to...` and `Translate ARB to...` into a single `Translate JSON/ARB to...` command
+  - Command now automatically detects file type (JSON, JSONC, or ARB) based on extension
+  - Simplified user experience with one command for all file types
+  - Context menus updated to show single unified command
+- 🔍 **Automatic File Type Detection**: ARB files are now detected automatically by extension instead of requiring a separate command parameter
+
+### Configuration
+- **l10n-translate-i18n.translateMetadata**: Translate metadata along with UI strings (default: false)
+
+### Technical Details
+- Added `translateMetadata` field to `TranslationRequest`
+- Removed `isArbFile` parameter from `handleTranslateCommand` - file type now auto-detected
+- Consolidated command registration from two commands to one
+- Enhanced activation events to include ARB language mode
+
 ## [1.7.0] - 2026-02-04
 
 ### Added

@@ -8,6 +8,7 @@ export const CONFIG = {
     USE_SHORTENING: "useShortening",
     GENERATE_PLURAL_FORMS: "generatePluralForms",
     SAVE_FILTERED_STRINGS: "saveFilteredStrings",
+    TRANSLATE_METADATA: "translateMetadata",
   },
 } as const;
 
