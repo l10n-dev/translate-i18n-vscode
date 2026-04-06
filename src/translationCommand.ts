@@ -100,11 +100,15 @@ export async function handleTranslateCommand(
     }
 
     // Reject directories (context menu appears on folders too since we use resourceScheme == file)
-    if (fs.statSync(fileUri.fsPath).isDirectory()) {
-      vscode.window.showErrorMessage(
-        `Please select a file, not a folder.`,
-      );
-      return;
+    try {
+      if (fs.statSync(fileUri.fsPath).isDirectory()) {
+        vscode.window.showErrorMessage(
+          `Please select a file, not a folder.`,
+        );
+        return;
+      }
+    } catch {
+      // If stat fails the file path is not a directory — proceed with translation
     }
 
     // Detect available languages from project structure
