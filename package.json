@@ -1,8 +1,8 @@
 {
   "name": "translate-i18n-json",
-  "displayName": "Translate I18n JSON/ARB by l10n.dev",
-  "description": "Translate i18n JSON and ARB files with AI directly inside VS Code using l10n.dev — smart, context-aware localization powered by AI.",
-  "version": "1.8.0",
+  "displayName": "Translate I18n by l10n.dev",
+  "description": "Translate i18n localization files (JSON, ARB, XML, YAML, PO, XLIFF, and more) with AI directly inside VS Code using l10n.dev — smart, context-aware localization powered by AI.",
+  "version": "1.9.0",
   "publisher": "l10n-dev",
   "license": "AGPL-3.0-only",
   "icon": "images/icon.png",
@@ -35,7 +35,12 @@
     "flutter",
     "intl",
     "jsonc",
-    "shopify"
+    "shopify",
+    "po",
+    "xliff",
+    "yaml",
+    "properties",
+    "xml"
   ],
   "engines": {
     "vscode": "^1.102.0"
@@ -47,15 +52,24 @@
   ],
   "activationEvents": [
     "onLanguage:json",
+    "onLanguage:jsonl",
     "onLanguage:jsonc",
-    "onLanguage:arb"
+    "onLanguage:arb",
+    "onLanguage:xml",
+    "onLanguage:yaml",
+    "onLanguage:properties",
+    "onLanguage:po",
+    "onLanguage:xliff",
+    "onLanguage:markdown",
+    "onLanguage:plaintext",
+    "onLanguage:restructuredtext"
   ],
   "main": "./dist/extension.js",
   "contributes": {
     "commands": [
       {
         "command": "l10n.translate-i18n.translate",
-        "title": "Translate JSON/ARB to...",
+        "title": "Translate to...",
         "category": "Translate I18n"
       },
       {
@@ -78,21 +92,21 @@
       "explorer/context": [
         {
           "command": "l10n.translate-i18n.translate",
-          "when": "resourceExtname == .json || resourceExtname == .jsonc || resourceExtname == .arb",
+          "when": "resourceScheme == file && !explorerResourceIsFolder",
           "group": "navigation"
         }
       ],
       "editor/context": [
         {
           "command": "l10n.translate-i18n.translate",
-          "when": "editorLangId == json || editorLangId == jsonc || editorLangId == arb",
+          "when": "editorTextFocus && resourceScheme == file",
           "group": "navigation"
         }
       ]
     },
     "configuration": {
-      "title": "Translate I18n JSON/ARB by l10n.dev",
-      "description": "Settings for the Translate I18n JSON and ARB files by l10n.dev extension",
+      "title": "Translate I18n by l10n.dev",
+      "description": "Settings for the Translate I18n files by l10n.dev extension",
       "properties": {
         "l10n-translate-i18n.apiKey": {
           "type": "string",
@@ -159,6 +173,6 @@
     "typescript": "^5.9.2"
   },
   "dependencies": {
-    "ai-l10n-sdk": "^1.3.0"
+    "ai-l10n-sdk": "^1.4.1"
   }
 }

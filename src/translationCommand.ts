@@ -6,7 +6,12 @@ import * as fs from "fs";
 import * as path from "path";
 
 // Local service imports
-import { I18nProjectManager, URLS } from "ai-l10n-sdk";
+import {
+  I18nProjectManager,
+  URLS,
+  validateLanguageCode,
+  normalizeLanguageCode,
+} from "ai-l10n-sdk";
 import {
   FileSchema,
   FinishReason,
@@ -76,14 +81,9 @@ export async function handleTranslateCommand(
     // Get the file to translate
     let fileUri = uri || vscode.window.activeTextEditor?.document.uri;
 
-    const expectedExtensions = [".json", ".jsonc", ".arb"];
-    const fileType = "JSON/JSONC or ARB";
-
     // If no valid file is available, prompt user to search and open one
-    const hasValidExtension =
-      fileUri && expectedExtensions.some((ext) => fileUri.fsPath.endsWith(ext));
-    if (!fileUri || !hasValidExtension) {
-      logger.logInfo(`No selected ${fileType} file, opening Quick Open panel`);
+    if (!fileUri) {
+      logger.logInfo(`No file selected, opening Quick Open panel`);
 
       // Use VS Code's Quick Open panel (Ctrl+P equivalent)
       await vscode.commands.executeCommand(VSCODE_COMMANDS.QUICK_OPEN);
@@ -92,10 +92,18 @@ export async function handleTranslateCommand(
 
       // Show a message to guide the user
       vscode.window.showInformationMessage(
-        `Search for and open a ${fileType} file, then run the translate command again.`,
+        `Search for and open a localization file, then run the translate command again.`,
         { modal: false },
       );
 
+      return;
+    }
+
+    // Reject directories (context menu appears on folders too since we use resourceScheme == file)
+    if (fs.statSync(fileUri.fsPath).isDirectory()) {
+      vscode.window.showErrorMessage(
+        `Please select a file, not a folder.`,
+      );
       return;
     }
 
@@ -104,7 +112,8 @@ export async function handleTranslateCommand(
       fileUri.fsPath,
     );
 
-    const isArbFile = fileUri.fsPath.endsWith(".arb");
+    const format = path.extname(fileUri.fsPath).slice(1);
+    const isArbFile = format === "arb";
 
     // Let user choose target language(s)
     const targetLanguageSelection = await languageSelector.selectTargetLanguage(
@@ -123,7 +132,7 @@ export async function handleTranslateCommand(
 
     // Validate all target languages
     for (const targetLanguage of targetLanguages) {
-      if (!i18nProjectManager.validateLanguageCode(targetLanguage)) {
+      if (!validateLanguageCode(targetLanguage)) {
         const message = `Invalid language code format: ${targetLanguage}. Please use BCP-47 format (e.g., en-US, en_US).`;
         vscode.window.showErrorMessage(message);
         logger.logInfo(`Validation error: ${message}`);
@@ -180,6 +189,7 @@ export async function handleTranslateCommand(
             apiKey,
             translateOnlyNewStrings,
             isArbFile ? FileSchema.ARBFlutter : null,
+            format,
           );
 
           return { success: true, language: targetLanguage };
@@ -234,6 +244,7 @@ async function performTranslation(
   apiKey: string,
   translateOnlyNewStrings: boolean,
   schema: FileSchema | null,
+  format?: string,
 ) {
   let targetStrings: string | undefined = undefined;
   if (translateOnlyNewStrings && fs.existsSync(targetFilePath)) {
@@ -255,8 +266,7 @@ async function performTranslation(
       const fileContent = fs.readFileSync(sourceFilePath, "utf8");
 
       // Normalize target language for API call
-      const normalizedTargetLanguage =
-        i18nProjectManager.normalizeLanguageCode(targetLanguage);
+      const normalizedTargetLanguage = normalizeLanguageCode(targetLanguage);
 
       const config = vscode.workspace.getConfiguration(CONFIG.SECTION);
       const request: TranslationRequest = {
@@ -274,6 +284,7 @@ async function performTranslation(
         translateOnlyNewStrings,
         targetStrings,
         schema,
+        format,
       };
 
       const result = await translationService.translate(request, apiKey);
@@ -303,10 +314,7 @@ async function performTranslation(
       fs.writeFileSync(outputPath, result.translations, "utf8");
 
       // Handle filtered strings if present
-      if (
-        result.filteredStrings &&
-        Object.keys(result.filteredStrings).length > 0
-      ) {
+      if (result.filteredStrings && result.filteredStrings.length > 0) {
         await handleFilteredStrings(logger, result, outputPath);
       }
 
@@ -335,8 +343,8 @@ async function handleFilteredStrings(
     CONFIG.KEYS.SAVE_FILTERED_STRINGS,
     true,
   );
-  const filteredStringsJson = JSON.stringify(result.filteredStrings, null, 2);
-  let warningMessage = `${result.filteredStringsCount} string(s) were excluded due to ${reasonMessage}.`;
+  const filteredStringsContent = result.filteredStrings ?? "";
+  let warningMessage = `Some string(s) were excluded due to ${reasonMessage}.`;
 
   if (saveFilteredStrings) {
     const ext = path.extname(targetFilePath);
@@ -344,13 +352,13 @@ async function handleFilteredStrings(
     const dir = path.dirname(targetFilePath);
     const filteredPath = path.join(dir, `${base}.filtered${ext}`);
 
-    fs.writeFileSync(filteredPath, filteredStringsJson, "utf8");
+    fs.writeFileSync(filteredPath, filteredStringsContent, "utf8");
 
     warningMessage += ` Saved to: ${filteredPath}`;
     logger.logWarning(warningMessage);
   } else {
     logger.logInfo(
-      `${warningMessage} Filtered strings:\n${filteredStringsJson}`,
+      `${warningMessage} Filtered strings:\n${filteredStringsContent}`,
     );
     warningMessage += ` Filtered strings are logged.`;
   }

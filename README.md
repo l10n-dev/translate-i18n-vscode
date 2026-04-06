@@ -1,25 +1,22 @@
-# Translate I18n JSON/ARB by l10n.dev
+# Translate I18n by l10n.dev
 
-AI-powered localization in VS Code. Translate i18n JSON and ARB files directly in your editor using l10n.dev's intelligent translation service.
+AI-powered localization in VS Code. Translate i18n localization files in multiple formats directly in your editor using l10n.dev's intelligent translation service.
 
 <img src="images/demonstration-dark.gif" alt="One click localization in VS Code">
 
 ## Features
 
 - 🤖 **AI-Powered Translation**: Context-aware translations using advanced AI. Translate to 165+ languages.
-- **Flutter Localization Support**: Full support for ARB (Application Resource Bundle) files used in Flutter apps. Metadata translation control.
-- 🛍️ **Shopify Theme Support**: Built-in support for Shopify theme localization files.
+- 📂 **Multi-Format Support**: Translate localization files in all major formats — JSON/JSONC, ARB (Flutter), XML/PLIST/RESX (Android, iOS, .NET), YAML (Ruby, Node.js), PO/POT (GNU Gettext, WordPress), XLIFF (CAT tools, Angular), Java `.properties`, CSV/TSV, and plain text files.
 - 🔧 **Customizable Translation Style**: Configure translations to use contractions (e.g., "don't" vs "do not"), enable shortening when translations exceed source text length, and generate plural forms for i18next compatibility.
 - 🔄 **Translate Only New Strings**: When a target file already exists, choose to translate only new strings and update the existing file, or create a new file with a copy number. Perfect for iterative localization workflows.
 - 🌐 **i18next Plural Forms Support**: Automatically generates all required plural form strings with correct plural suffixes when enabled—ideal for i18next projects. For languages with complex pluralization rules (like Russian, Arabic, or Polish), the extension ensures every necessary form is created, even if your source file only has `_one` or `_other`. This guarantees your app works correctly in every locale, with no missing or incorrect plural forms.
 - 🛠️ **Developer-Friendly Features**: Preserves placeholders, HTML tags, and formatting while adapting dates and numbers to target locales. Intelligently avoids translating things that shouldn't be translated (proper names, urls, technical terms, etc.). Learn more in this article: [i18n vs l10n: Why Developers Should Care and How AI Can Help](https://medium.com/@AntonAntonov88/i18n-vs-l10n-why-developers-should-care-and-how-ai-can-help-fec7a7580d17).
-- 🔒 **Type Safety**: Preserves JSON data types during translation—numbers remain numbers, booleans stay booleans, and null values are maintained. AI translates only string content without converting other data types to strings.
+- 🔒 **Type Safety**: Preserves JSON data types during translation—numbers remain numbers, booleans stay booleans, and null stay null. AI translates only string content without converting other data types to strings.
 - 🔐 **Secure API Key Storage**: Your API Keys are stored securely using VS Code's built-in secrets manager.
 - 🎯 **Smart Language Detection**: Automatically detects target languages from your project structure for seamless file organization.
 - 🌍 **Translate to All Languages**: Translate your file to all detected languages at once with a single command.
-- 🌐 **i18next Support**: Works seamlessly with i18next and other common i18n formats.
 - 🧩 **Source Text as Keys**: Supports projects using source text as translation keys.
-- 📝 **JSONC Support**: Support for JSON with Comments (JSONC) files. Comments are stripped during processing to ensure accurate translation and missing string detection.
 - 🕵️ **Smart Error Detection & Chunking**: Automatically detects and retries translations if placeholders or formatting are lost by the AI. For large files, l10n.dev splits content into manageable chunks, maintaining links and context between segments. This prevents issues common with direct uploads to AI models (like Claude or GPT), where exceeding ~16,000 characters can cause the model to omit, merge, or shorten content—resulting in lost context and lower translation quality. l10n.dev's approach ensures high-quality, accurate translations even for large i18n files.
 - 💰 **Free**: Users get 30,000 characters free monthly.
 
@@ -35,8 +32,8 @@ AI-powered localization in VS Code. Translate i18n JSON and ARB files directly i
 2. Run `l10n.dev: Set API Key`
 3. Paste your API Key when prompted
 ### 3. Translate Your Files
-1. Right-click on any JSON, JSONC, or ARB file in the Explorer or Editor
-2. Select `Translate JSON/ARB to...`
+1. Right-click on any supported localization file (JSON, JSONC, ARB, XML, YAML, PO, XLIFF, `.properties`, CSV, TSV, TXT, and more) in the Explorer or Editor
+2. Select `Translate to...`
 3. Choose your target language (or select **"Translate to All Languages"** for batch translation)
 4. If target file(s) exist, choose to update existing files or create new ones
 5. Wait for translation to complete
@@ -145,7 +142,7 @@ Configure translation behavior in VS Code settings (`Ctrl+,` and search for "l10
 - `Translate I18n: Set API Key` - Securely configure API Key
 - `Translate I18n: Clear API Key` - Clear API Key in VS Code secrets storage
 - `Translate I18n: Configure Translation Options` - Open extension settings
-- `Translate I18n: Translate JSON/ARB to...` - Translate JSON file or ARB file (Flutter localization)
+- `Translate I18n: Translate to...` - Translate any supported localization file (JSON, ARB, XML, YAML, PO, XLIFF, `.properties`, CSV, TSV, TXT, and more)
 
 ## Language Support
 

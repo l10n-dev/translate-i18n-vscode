@@ -1,6 +1,29 @@
 # Change Log
 
-All notable changes to the "Translate I18n JSON/ARB by l10n.dev" extension will be documented in this file.
+All notable changes to the "Translate I18n by l10n.dev" extension will be documented in this file.
+
+## [1.9.0] - 2026-04-04
+
+### Added
+- 📂 **Multi-Format Support**: Translate localization files in all major formats — no longer limited to JSON and ARB:
+  - **XML / PLIST / RESX / STRINGS**: Android, iOS, .NET
+  - **YAML / YML**: Ruby, Node.js, configs
+  - **PO / POT**: GNU Gettext, PHP, Python, WordPress
+  - **XLIFF / XLF**: CAT tools, localization platforms, Angular
+  - **.properties**: Java, Spring Boot
+  - **CSV / TSV**: Spreadsheets, custom workflows
+  - **TXT**: Any plain text localization files
+
+### Changed
+- 🔄 **Unified Translate Command**: Renamed `Translate JSON/ARB to...` to `Translate to...` to reflect multi-format support
+- 🏷️ **Extension Renamed**: "Translate I18n JSON/ARB by l10n.dev" → "Translate I18n by l10n.dev"
+- 🔍 **Broader File Detection**: Explorer and editor context menus now appear for all supported localization file extensions
+- 📦 **SDK Update**: Upgraded to [ai-l10n-sdk](https://www.npmjs.com/package/ai-l10n-sdk) v1.4.1 for multi-format translation support
+
+### Technical Details
+- Added `format` field to `TranslationRequest` (file extension without dot, e.g. `xml`, `yaml`, `po`)
+- Added activation events for `xml`, `yaml`, and `properties` language modes
+- Explorer context menu updated to include all supported extensions
 
 ## [1.8.0] - 2026-02-12
 

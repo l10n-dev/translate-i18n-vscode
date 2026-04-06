@@ -48,10 +48,13 @@ suite("Translation Command Tests", () => {
     sinon.restore();
   });
 
-  test("handleTranslateCommand shows error for non-JSON files", async () => {
+  test("handleTranslateCommand accepts any file extension", async () => {
     // Arrange
     const mockApiKey = "test-api-key";
     const mockUri = { fsPath: "/test/file.txt" } as vscode.Uri;
+
+    mockI18nProjectManager.detectLanguagesFromProject.returns(["es"]);
+    mockLanguageSelector.selectTargetLanguage.resolves(null); // User cancels
 
     // Act
     await handleTranslateCommand(
@@ -63,17 +66,13 @@ suite("Translation Command Tests", () => {
       mockLanguageSelector,
     );
 
-    // Assert
+    // Assert - .txt file should proceed to language detection, not show Quick Open
     assert.ok(
-      (vscode.commands.executeCommand as sinon.SinonStub).calledWith(
+      !(vscode.commands.executeCommand as sinon.SinonStub).calledWith(
         VSCODE_COMMANDS.QUICK_OPEN,
       ),
     );
-    assert.ok(
-      (vscode.window.showInformationMessage as sinon.SinonStub).calledWith(
-        "Search for and open a JSON/JSONC or ARB file, then run the translate command again.",
-      ),
-    );
+    assert.ok(mockI18nProjectManager.detectLanguagesFromProject.called);
   });
 
   test("Translation request includes generatePluralForms configuration", async () => {
@@ -137,10 +136,7 @@ suite("Translation Command Tests", () => {
         "es",
         "fr_FR",
       ]);
-      mockLanguageSelector.selectTargetLanguage.resolves("es_ES");
-      mockI18nProjectManager.validateLanguageCode
-        .withArgs("es_ES")
-        .returns(false);
+      mockLanguageSelector.selectTargetLanguage.resolves("invalid!!");
 
       const mockUri = {
         fsPath: "/test/path/app_en_US.arb",
@@ -156,10 +152,7 @@ suite("Translation Command Tests", () => {
         mockLanguageSelector,
       );
 
-      // Assert - validateLanguageCode is called without isArbFile parameter
-      assert.ok(
-        mockI18nProjectManager.validateLanguageCode.calledWith("es_ES"),
-      );
+      // Assert - showErrorMessage is called for invalid language code
       assert.ok(
         (vscode.window.showErrorMessage as sinon.SinonStub).calledWith(
           sinon.match(/BCP-47/),
@@ -178,9 +171,6 @@ suite("Translation Command Tests", () => {
       mockI18nProjectManager.validateLanguageCode
         .withArgs("es_ES")
         .returns(true);
-      mockI18nProjectManager.normalizeLanguageCode
-        .withArgs("es_ES")
-        .returns("es-ES");
       mockI18nProjectManager.generateTargetFilePath.returns(
         "/test/path/app_es_ES.arb",
       );
@@ -231,10 +221,10 @@ suite("Translation Command Tests", () => {
         mockLanguageSelector,
       );
 
-      // Assert - normalizeLanguageCode is called without isArbFile parameter
-      assert.ok(
-        mockI18nProjectManager.normalizeLanguageCode.calledWith("es_ES"),
-      );
+      // Assert - translate was called with normalized language code (es_ES -> es-ES)
+      assert.ok(mockTranslationService.translate.calledOnce);
+      const requestArg = mockTranslationService.translate.args[0][0];
+      assert.strictEqual(requestArg.targetLanguageCode, "es-ES");
     });
   });
 
@@ -363,7 +353,7 @@ suite("Translation Command Tests", () => {
       );
       assert.ok(
         (vscode.window.showInformationMessage as sinon.SinonStub).calledWith(
-          "Search for and open a JSON/JSONC or ARB file, then run the translate command again.",
+          "Search for and open a localization file, then run the translate command again.",
         ),
       );
     });
