@@ -96,9 +96,16 @@ export class LanguageSelector {
     }
 
     // Predict languages using API
-    const predictedLanguages = await this.translationService.predictLanguages(
+    const predictResponse = await this.translationService.predictLanguages(
       searchInput
     );
+
+    if (!predictResponse.success) {
+      vscode.window.showWarningMessage("Failed to search for languages.");
+      return undefined;
+    }
+
+    const predictedLanguages = predictResponse.data;
 
     if (predictedLanguages.length === 0) {
       vscode.window.showWarningMessage("No languages found for your search.");

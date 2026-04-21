@@ -2,6 +2,18 @@
 
 All notable changes to the "Translate I18n by l10n.dev" extension will be documented in this file.
 
+## [1.10.0] - 2026-04-21
+
+### Changed
+- 📦 **SDK Update**: Upgraded to [ai-l10n-sdk](https://www.npmjs.com/package/ai-l10n-sdk) v1.5.1 for structured API responses
+- 🔄 **Structured Error Handling**: `translate()` now returns a typed `ApiResponse` discriminated union instead of throwing — errors are surfaced with a `reason` and `message` rather than exceptions
+- 🔍 **Language Search Resilience**: Language search (`predictLanguages`) now returns a structured response — network errors are handled gracefully and shown as a warning instead of crashing
+
+### Technical Details
+- `translate()` return type changed from `TranslationResult | null` to `TranslationResponse` (`ApiResponse<TranslationResult> & { currentBalance?: number }`)
+- `remainingBalance` on `TranslationResult` replaced by `currentBalance` on `TranslationResponse`
+- `predictLanguages()` return type changed from `Language[]` (throwing) to `ApiResponse<Language[]>` (never throws)
+
 ## [1.9.0] - 2026-04-04
 
 ### Added

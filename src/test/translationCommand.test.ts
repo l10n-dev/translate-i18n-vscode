@@ -185,9 +185,12 @@ suite("Translation Command Tests", () => {
       sinon.stub(fs, "writeFileSync");
 
       mockTranslationService.translate.resolves({
-        translations: '{"test": "translated"}',
-        usage: { charsUsed: 100 },
-        remainingBalance: 1000,
+        success: true,
+        data: {
+          translations: '{"test": "translated"}',
+          usage: { charsUsed: 100 },
+        },
+        currentBalance: 1000,
       });
 
       // Mock workspace configuration
@@ -284,9 +287,12 @@ suite("Translation Command Tests", () => {
       const writeFileStub = sinon.stub(fs, "writeFileSync");
 
       mockTranslationService.translate.resolves({
-        translations: '{"greeting": "Hola", "farewell": "Adiós"}',
-        usage: { charsUsed: 50 },
-        remainingBalance: 2000,
+        success: true,
+        data: {
+          translations: '{"greeting": "Hola", "farewell": "Adiós"}',
+          usage: { charsUsed: 50 },
+        },
+        currentBalance: 2000,
       });
 
       // Mock workspace configuration
@@ -334,6 +340,9 @@ suite("Translation Command Tests", () => {
       // Arrange
       const mockApiKey = "test-api-key";
       const mockUri = undefined;
+
+      // Ensure no active editor provides a fallback URI
+      sinon.stub(vscode.window, "activeTextEditor").value(undefined);
 
       // Act
       await handleTranslateCommand(
