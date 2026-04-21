@@ -16,7 +16,7 @@ export class OutputChannelLogger implements ILogger {
     error?: unknown,
     context?: string,
     linkBtnText?: string,
-    url?: string
+    url?: string,
   ): void {
     // Show user-friendly message
     const learnMoreText = linkBtnText || "Learn More";
@@ -37,6 +37,8 @@ export class OutputChannelLogger implements ILogger {
 
     if (error instanceof Error) {
       this.outputChannel.appendLine(`Stack trace: ${error.stack}`);
+    } else if (error) {
+      this.outputChannel.appendLine(`Error details: ${JSON.stringify(error)}`);
     }
     this.outputChannel.appendLine("---");
 
@@ -55,6 +57,8 @@ export class OutputChannelLogger implements ILogger {
 
     if (error instanceof Error) {
       this.outputChannel.appendLine(`Stack trace: ${error.stack}`);
+    } else if (error) {
+      this.outputChannel.appendLine(`Error details: ${JSON.stringify(error)}`);
     }
     this.outputChannel.appendLine("---");
 
@@ -68,6 +72,8 @@ export class OutputChannelLogger implements ILogger {
 
     if (error instanceof Error) {
       this.outputChannel.appendLine(`Stack trace: ${error.stack}`);
+    } else if (error) {
+      this.outputChannel.appendLine(`Error details: ${JSON.stringify(error)}`);
     }
     this.outputChannel.appendLine("---");
 

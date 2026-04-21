@@ -102,9 +102,7 @@ export async function handleTranslateCommand(
     // Reject directories (context menu appears on folders too since we use resourceScheme == file)
     try {
       if (fs.statSync(fileUri.fsPath).isDirectory()) {
-        vscode.window.showErrorMessage(
-          `Please select a file, not a folder.`,
-        );
+        vscode.window.showErrorMessage(`Please select a file, not a folder.`);
         return;
       }
     } catch {
@@ -183,7 +181,7 @@ export async function handleTranslateCommand(
             `Translating (${i + 1}/${totalLanguages}) to ${targetLanguage}`,
           );
 
-          await performTranslation(
+          const success = await performTranslation(
             logger,
             fileUri.fsPath,
             targetLanguage,
@@ -196,7 +194,7 @@ export async function handleTranslateCommand(
             format,
           );
 
-          return { success: true, language: targetLanguage };
+          return { success, language: targetLanguage };
         } catch (error) {
           logger.showAndLogError(
             `Translation to ${targetLanguage} failed: ${
@@ -237,6 +235,7 @@ export async function handleTranslateCommand(
 /**
  * Performs the actual translation with progress indication
  * Reads file, calls translation service, and saves result
+ * Returns true on success, false if the error was already handled and shown to the user
  */
 async function performTranslation(
   logger: ILogger,
@@ -249,7 +248,7 @@ async function performTranslation(
   translateOnlyNewStrings: boolean,
   schema: FileSchema | null,
   format?: string,
-) {
+): Promise<boolean> {
   let targetStrings: string | undefined = undefined;
   if (translateOnlyNewStrings && fs.existsSync(targetFilePath)) {
     targetStrings = fs.readFileSync(targetFilePath, "utf8");
@@ -284,7 +283,6 @@ async function performTranslation(
         ),
         translateMetadata: config.get(CONFIG.KEYS.TRANSLATE_METADATA, false),
         client: CONFIG.CLIENT,
-        returnTranslationsAsString: true,
         translateOnlyNewStrings,
         targetStrings,
         schema,
@@ -292,12 +290,18 @@ async function performTranslation(
       };
 
       const result = await translationService.translate(request, apiKey);
-      if (!result) {
-        const message = "Translation service returned no result.";
-        throw new Error(message);
+      if (!result.success) {
+        // logger.showAndLogError(
+        //   result.message,
+        //   undefined,
+        //   `Target language: ${targetLanguage}, File: ${sourceFilePath}`,
+        // );
+        return false;
       }
 
-      if (!result.translations) {
+      const translationData = result.data;
+
+      if (!translationData.translations) {
         const message =
           "No translation results received. Please verify that source file contains content.";
         await showInformationMessage(logger, message);
@@ -315,17 +319,29 @@ async function performTranslation(
       }
 
       // Save translated file
-      fs.writeFileSync(outputPath, result.translations, "utf8");
+      fs.writeFileSync(outputPath, translationData.translations, "utf8");
 
       // Handle filtered strings if present
-      if (result.filteredStrings && result.filteredStrings.length > 0) {
-        await handleFilteredStrings(logger, result, outputPath);
+      if (
+        translationData.filteredStrings &&
+        translationData.filteredStrings.length > 0
+      ) {
+        await handleFilteredStrings(logger, translationData, outputPath);
       }
 
       // Show success message with usage info after progress completes
-      await showTranslationSuccess(logger, result, outputPath);
+      await showTranslationSuccess(
+        logger,
+        translationData,
+        outputPath,
+        result.currentBalance,
+      );
+
+      return true;
     },
   );
+
+  return false; // withProgress returned without a value (e.g. early return before success)
 }
 
 async function handleFilteredStrings(
@@ -397,9 +413,10 @@ async function showTranslationSuccess(
   logger: ILogger,
   result: TranslationResult,
   targetFilePath: string,
+  currentBalance?: number,
 ) {
   const charsUsed = result.usage.charsUsed || 0;
-  const remainingBalance = result.remainingBalance || 0;
+  const remainingBalance = currentBalance || 0;
   let message = `✅ Translation completed! Used ${charsUsed.toLocaleString()} characters.`;
   if (charsUsed > 0) {
     message += ` Remaining: ${remainingBalance.toLocaleString()} characters. File saved as ${path.basename(
