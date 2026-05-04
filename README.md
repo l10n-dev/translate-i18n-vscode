@@ -7,7 +7,7 @@ AI-powered localization in VS Code. Translate i18n localization files in multipl
 ## Features
 
 - 🤖 **AI-Powered Translation**: Context-aware translations using advanced AI. Translate to 165+ languages.
-- 📂 **Multi-Format Support**: Translate localization files in all major formats — JSON/JSONC, ARB (Flutter), XML/PLIST/RESX (Android, iOS, .NET), YAML (Ruby, Node.js), PO/POT (GNU Gettext, WordPress), XLIFF (CAT tools, Angular), Java `.properties`, CSV/TSV, and plain text files.
+- 📂 **Multi-Format Support**: Translate localization files in all major formats — JSON/JSONC, ARB (Flutter), XML/PLIST/RESX (Android, iOS, .NET), YAML (Ruby, Node.js), PO/POT (GNU Gettext, WordPress), XLIFF (CAT tools, Angular), Java `.properties`, CSV/TSV, Markdown and plain text files.
 - 🔧 **Customizable Translation Style**: Configure translations to use contractions (e.g., "don't" vs "do not"), enable shortening when translations exceed source text length, and generate plural forms for i18next compatibility.
 - 🔄 **Translate Only New Strings**: When a target file already exists, choose to translate only new strings and update the existing file, or create a new file with a copy number. Perfect for iterative localization workflows.
 - 🌐 **i18next Plural Forms Support**: Automatically generates all required plural form strings with correct plural suffixes when enabled—ideal for i18next projects. For languages with complex pluralization rules (like Russian, Arabic, or Polish), the extension ensures every necessary form is created, even if your source file only has `_one` or `_other`. This guarantees your app works correctly in every locale, with no missing or incorrect plural forms.
