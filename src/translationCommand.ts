@@ -291,11 +291,6 @@ async function performTranslation(
 
       const result = await translationService.translate(request, apiKey);
       if (!result.success) {
-        logger.showAndLogError(
-          result.message,
-          undefined,
-          `Target language: ${targetLanguage}, File: ${sourceFilePath}`,
-        );
         return false;
       }
 

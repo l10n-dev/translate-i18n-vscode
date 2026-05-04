@@ -2,6 +2,11 @@
 
 All notable changes to the "Translate I18n by l10n.dev" extension will be documented in this file.
 
+## [1.10.2] - 2026-05-05
+
+### Fixed
+- 🐛 **Translation Error Handling**: remove redundant error logging in translation command.
+
 ## [1.10.1] - 2026-05-05
 
 ### Fixed
