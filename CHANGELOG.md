@@ -2,6 +2,11 @@
 
 All notable changes to the "Translate I18n by l10n.dev" extension will be documented in this file.
 
+## [1.10.1] - 2026-05-05
+
+### Fixed
+- 🐛 **Translation Error Handling**: `performTranslation` was returning `false` even on successful translations due to a suppressed error path — error messages are now properly surfaced to the user when translation fails
+
 ## [1.10.0] - 2026-04-21
 
 ### Changed

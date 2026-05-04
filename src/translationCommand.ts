@@ -254,7 +254,7 @@ async function performTranslation(
     targetStrings = fs.readFileSync(targetFilePath, "utf8");
   }
 
-  await vscode.window.withProgress(
+  return await vscode.window.withProgress(
     {
       location: vscode.ProgressLocation.Notification,
       title: `Translating ${path.basename(
@@ -291,21 +291,21 @@ async function performTranslation(
 
       const result = await translationService.translate(request, apiKey);
       if (!result.success) {
-        // logger.showAndLogError(
-        //   result.message,
-        //   undefined,
-        //   `Target language: ${targetLanguage}, File: ${sourceFilePath}`,
-        // );
+        logger.showAndLogError(
+          result.message,
+          undefined,
+          `Target language: ${targetLanguage}, File: ${sourceFilePath}`,
+        );
         return false;
       }
 
       const translationData = result.data;
 
-      if (!translationData.translations) {
+      if (fileContent.length > 0 && !translationData.translations) {
         const message =
-          "No translation results received. Please verify that source file contains content.";
+          "No translation results received. Please verify that source file contains text content.";
         await showInformationMessage(logger, message);
-        return;
+        return false;
       }
 
       progress.report({ message: "Saving translated file..." });
@@ -319,7 +319,7 @@ async function performTranslation(
       }
 
       // Save translated file
-      fs.writeFileSync(outputPath, translationData.translations, "utf8");
+      fs.writeFileSync(outputPath, translationData.translations ?? "", "utf8");
 
       // Handle filtered strings if present
       if (
@@ -340,8 +340,6 @@ async function performTranslation(
       return true;
     },
   );
-
-  return false; // withProgress returned without a value (e.g. early return before success)
 }
 
 async function handleFilteredStrings(
