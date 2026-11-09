@@ -2,6 +2,18 @@
 
 All notable changes to the "Translate i18n by l10n.dev" extension will be documented in this file.
 
+## [1.14.1] — 2026-11-09
+
+### Changed
+- 💳 **Subscription plans**: l10n.dev now uses monthly subscription plans instead of a monthly free allowance and pay-as-you-go packages. New users get a 3-day free trial with 10,000 characters.
+  - The welcome notification describes the free trial (it previously offered 30,000 free characters every month) and has a new **View Plans** button that opens [l10n.dev/#pricing](https://l10n.dev/#pricing).
+  - The README's Getting Started, Pricing and Troubleshooting sections describe the trial and the monthly plans, and link to the pricing page for current prices in your currency.
+  - When a translation fails because there are not enough characters left, the message now suggests upgrading the plan or renewing early on the Billing page (unused characters carry over), not buying more characters. The built-in MCP server gives agents the same advice.
+- The Marketplace pricing label is now **Free Trial** (`"pricing": "Trial"`) instead of **Free**.
+
+### Technical Details
+- Updated [ai-l10n-sdk](https://www.npmjs.com/package/ai-l10n-sdk) to v1.12.1 and the bundled [ai-l10n-mcp](https://www.npmjs.com/package/ai-l10n-mcp) server to v1.2.1
+
 ## [1.14.0] — 2026-08-13
 
 ### Added

@@ -65,15 +65,22 @@ function setupWelcomeMessage(context: vscode.ExtensionContext) {
     false,
   );
   if (!hasShownWelcome) {
-    const freeBalance = (30000).toLocaleString();
-    const welcomeMessage = `🎉 Welcome to l10n.dev! Create a free account and get ${freeBalance} characters monthly for free. Get your API Key from ${URLS.API_KEYS}`;
+    const trialBalance = (10000).toLocaleString();
+    const welcomeMessage = `🎉 Welcome to l10n.dev! New users get a 3-day free trial with ${trialBalance} characters, then a monthly plan. Get your API Key from ${URLS.API_KEYS}`;
     vscode.window
-      .showInformationMessage(welcomeMessage, "Set API Key", "Get API Key")
+      .showInformationMessage(
+        welcomeMessage,
+        "Set API Key",
+        "Get API Key",
+        "View Plans",
+      )
       .then((selection) => {
         if (selection === "Set API Key") {
           vscode.commands.executeCommand(COMMANDS.SET_API_KEY);
         } else if (selection === "Get API Key") {
           vscode.env.openExternal(vscode.Uri.parse(URLS.API_KEYS));
+        } else if (selection === "View Plans") {
+          vscode.env.openExternal(vscode.Uri.parse(URLS.PRICING));
         }
       });
     context.globalState.update(STATE_KEYS.WELCOME_SHOWN, true);
