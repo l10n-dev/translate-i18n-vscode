@@ -33,13 +33,13 @@ AI-powered localization in VS Code. [Translate i18n](https://l10n.dev/ws/transla
 - **Knows your layout** — detects target languages from folder-based (`locales/en/`), file-based (`en.json`) and embedded-code (`emails.en.json`, `messages_en_US.properties`) structures and writes files where they belong.
 - **[Built-in MCP server](#for-ai-agents-mcp-server)** — turns your coding agent into a localization specialist. Ships with the extension and reuses the API Key you already set.
 - **Secure by default** — your API Key lives in VS Code's encrypted secrets storage, never in a config file.
-- **Free to start** — 10,000 characters every month, no subscription.
+- **Try it free** — new users get a 3-day free trial with 10,000 characters, then a monthly plan. See [Pricing](#pricing).
 
 ## Getting Started
 
 ### 1. Get Your API Key
 1. Visit [l10n.dev/ws/keys](https://l10n.dev/ws/keys)
-2. Sign up for a free account
+2. Create an account — new users get a 3-day free trial with 10,000 characters; after that a monthly plan is required (see [Pricing](#pricing))
 3. Generate your API Key
 
 ### 2. Configure the Extension
@@ -209,9 +209,12 @@ l10n.dev supports 165+ languages with varying proficiency levels:
 
 ## Pricing
 
-- **Free Characters**: 10,000 characters for free monthly.
-- **Pay-as-you-go**: Affordable character-based pricing. Visit [l10n.dev/#pricing](https://l10n.dev/#pricing) for current pricing.
-- **No subscription required**
+The extension is free to install; translations run on l10n.dev and require a subscription.
+
+- **Free Trial**: New users get 3 days free with 10,000 characters
+- **Monthly Plans**: Basic (100,000 characters/month), Standard (1,000,000 characters/month) and Pro (5,000,000 characters/month)
+- **Flexible**: Renews monthly; cancel anytime on the Billing page. Unused characters carry over when you renew or upgrade early
+- **Current Prices**: Visit [l10n.dev/#pricing](https://l10n.dev/#pricing) for up-to-date prices in your currency
 
 ## Troubleshooting
 
@@ -223,7 +226,7 @@ l10n.dev supports 165+ languages with varying proficiency levels:
 
 **"Insufficient balance"**
 - Check your account balance at [l10n.dev](https://l10n.dev)
-- Purchase more characters if needed
+- Translate a smaller portion of your content, or upgrade your plan or renew early on the Billing page of your l10n.dev account — unused characters carry over. Plans: [l10n.dev/#pricing](https://l10n.dev/#pricing)
 
 **"No languages detected"**
 - The extension will prompt you to enter a language code manually
