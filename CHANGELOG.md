@@ -2,6 +2,15 @@
 
 All notable changes to the "Translate i18n by l10n.dev" extension will be documented in this file.
 
+## [1.14.2] — 2026-11-11
+
+### Changed
+- 📖 **AI glossary generation for incremental updates**: with **Generate Glossary** enabled and **Translate Only New Strings** chosen, you now pay only for the new and changed strings. Previously the whole source was charged upfront. On the Pro plan, the glossary is built from the whole content for more context.
+- 🤖 **MCP server**: the `l10n_translate_file` tool descriptions tell agents about this, so they no longer warn that glossary generation charges for the whole file.
+
+### Technical Details
+- Updated [ai-l10n-sdk](https://www.npmjs.com/package/ai-l10n-sdk) to v1.12.2 and the bundled [ai-l10n-mcp](https://www.npmjs.com/package/ai-l10n-mcp) server to v1.2.2
+
 ## [1.14.1] — 2026-11-09
 
 ### Changed
